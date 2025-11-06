@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Kayitlar - Sosyal Yardim{% endblock %}
+
+{% block content %}
+<section class="card shadow-sm border-0">
+    <div class="card-header py-2 bg-white border-0">
+        <div class="d-flex align-items-center justify-content-between">
+            <h1 class="h4 mb-0">Kayitli Haneler</h1>
+            <a href="{{ url_for('create_person') }}" class="btn btn-primary">Yeni Kayit</a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="px-3 py-2 border-bottom bg-light">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label for="search-file-no" class="form-label">Dosya No ile Ara</label>
+                    <input
+                        type="text"
+                        id="search-file-no"
+                        class="form-control"
+                        placeholder="Dosya numarasi girin"
+                        data-search-url="{{ url_for('search_persons') }}"
+                    >
+                </div>
+                <div class="col-md-5 col-lg-4">
+                    <label for="search-full-name" class="form-label">Ad Soyad ile Ara</label>
+                    <input
+                        type="text"
+                        id="search-full-name"
+                        class="form-control"
+                        placeholder="Ad soyad girin"
+                    >
+                </div>
+                <div class="col-md-3 col-lg-4 text-muted small">
+                    Dosya numarasini yazdikca sonuclar otomatik filtrelenir.
+                </div>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead class="table-light small">
+                    <tr>
+                        <th scope="col">Dosya No</th>
+                        <th scope="col">Ad Soyad</th>
+                        <th scope="col">Telefon</th>
+                        <th scope="col">Sosyal Guvence</th>
+                        <th scope="col">Olusturulma</th>
+                        <th scope="col">Guncelleme</th>
+                        <th scope="col" class="text-end">Islemler</th>
+                    </tr>
+                </thead>
+                <tbody
+                    id="person-table-body"
+                    data-empty-text="Henuz kayit bulunmuyor. Ilk kaydi olusturmak icin ustteki dugmeyi kullanabilirsiniz."
+                >
+                    {% if persons %}
+                        {% for person in persons %}
+                            <tr class="small">
+                                <td class="fw-semibold">{{ person.file_no }}</td>
+                                <td>{{ person.full_name }}</td>
+                                <td>{{ person.phone or "-" }}</td>
+                                <td>{{ person.social_security or "-" }}</td>
+                                <td>{{ person.created_at | datetimeformat }}</td>
+                                <td>{{ person.updated_at | datetimeformat }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a
+                                            href="{{ url_for('edit_person', person_id=person.id) }}"
+                                            class="btn btn-outline-secondary"
+                                        >
+                                            Duzenle
+                                        </a>
+                                        <form
+                                            method="post"
+                                            action="{{ url_for('delete_person', person_id=person.id) }}"
+                                            onsubmit="return confirm('Kaydi silmek istediginize emin misiniz?');"
+                                        >
+                                            <button type="submit" class="btn btn-outline-danger">Sil</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr class="table-empty">
+                            <td colspan="7" class="text-center text-muted py-4">
+                                Henuz kayit bulunmuyor. Ilk kaydi olusturmak icin ustteki dugmeyi kullanabilirsiniz.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+{% endblock %}
