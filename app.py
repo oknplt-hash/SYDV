@@ -192,7 +192,10 @@ def create_app():
         return agenda
 
     with app.app_context():
-        init_db()
+        try:
+            init_db()
+        except Exception as e:
+            print(f"Database initialization error: {e}")
 
     @app.route("/")
     def index():
@@ -202,9 +205,12 @@ def create_app():
             FROM persons
             ORDER BY created_at DESC
         """
-        with db.cursor() as cursor:
-            cursor.execute(query)
-            persons = cursor.fetchall()
+        try:
+            with db.cursor() as cursor:
+                cursor.execute(query)
+                persons = cursor.fetchall()
+        except Exception as e:
+            return f"Database Error: {e}", 500
         return render_template("index.html", persons=persons)
 
     @app.route("/persons/search")
