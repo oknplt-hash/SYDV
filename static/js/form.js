@@ -194,6 +194,17 @@ function setupPersonSearch() {
               <td>${escapeHtml(person.updated_at)}</td>
               <td class="text-end">
                   <div class="btn-group btn-group-sm" role="group">
+                      <button
+                          type="button"
+                          class="btn btn-outline-success"
+                          data-bs-toggle="modal"
+                          data-bs-target="#addToAgendaModal"
+                          data-file-no="${escapeHtml(person.file_no)}"
+                          data-full-name="${escapeHtml(person.full_name)}"
+                          title="Gundeme Ekle"
+                      >
+                          <i class="bi bi-calendar-plus"></i> G.Ekle
+                      </button>
                       <a href="${editUrl}" class="btn btn-outline-secondary">Düzenle</a>
                       <form method="post" action="${deleteUrl}" onsubmit="return confirm('Kaydı silmek istediğinize emin misiniz?');">
                           <button type="submit" class="btn btn-outline-danger">Sil</button>
