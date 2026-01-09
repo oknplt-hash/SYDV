@@ -12,6 +12,35 @@ document.addEventListener("DOMContentLoaded", () => {
   const nextBtn = screen.querySelector('[data-action="next"]');
   const modalState = { open: false, buttons: [], index: 0, closeModal: null, stepModal: null, openModal: null };
 
+  // Preload edilmiş slide'ları takip et
+  const preloadedSlides = new Set();
+
+  const preloadSlideImages = (slideIndex) => {
+    if (slideIndex < 0 || slideIndex >= slides.length) return;
+    if (preloadedSlides.has(slideIndex)) return;
+
+    const slide = slides[slideIndex];
+    const images = slide.querySelectorAll("img[loading='lazy']");
+    images.forEach(img => {
+      if (img.src && !img.complete) {
+        const preloadImg = new Image();
+        preloadImg.src = img.src;
+      }
+    });
+
+    // Gallery butonlarındaki thumbnail'ları da preload et
+    const galleryDots = slide.querySelectorAll(".gallery-dot[data-image]");
+    galleryDots.forEach(dot => {
+      const thumbSrc = dot.dataset.image;
+      if (thumbSrc) {
+        const preloadImg = new Image();
+        preloadImg.src = thumbSrc;
+      }
+    });
+
+    preloadedSlides.add(slideIndex);
+  };
+
   const update = () => {
     slides.forEach((slide, idx) => {
       slide.classList.toggle("is-active", idx === index);
@@ -19,6 +48,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentEl) currentEl.textContent = String(index + 1);
     if (prevBtn) prevBtn.disabled = index === 0;
     if (nextBtn) nextBtn.disabled = index === slides.length - 1;
+
+    // Mevcut ve sonraki slide'ı preload et
+    preloadSlideImages(index);
+    preloadSlideImages(index + 1);
   };
 
   if (totalEl) totalEl.textContent = String(slides.length);
@@ -97,16 +130,47 @@ function setupGalleryPopups(root, state) {
   const imageEl = modal.querySelector("#presentation-modal-image");
   const captionEl = modal.querySelector("#presentation-modal-caption");
 
+  // Tam boyut yükleme durumunu takip et
+  let fullSizeLoading = false;
+
   const showCurrent = () => {
     if (!state.buttons.length) return;
     const button = state.buttons[state.index];
     if (!button) return;
-    const src = button.dataset.image;
-    if (!src) return;
-    imageEl.src = src;
+
+    // Önce thumbnail'ı göster
+    const thumbSrc = button.dataset.image;
+    const fullSrc = button.dataset.fullsrc || thumbSrc;
     const caption = button.dataset.caption || "";
+
+    if (!thumbSrc) return;
+
+    // Modal'a loading class ekle
+    imageEl.classList.add("loading");
+    imageEl.src = thumbSrc;
     captionEl.textContent = caption;
     imageEl.alt = caption;
+
+    // Arka planda tam boyut yükle
+    if (fullSrc && fullSrc !== thumbSrc) {
+      fullSizeLoading = true;
+      const fullImg = new Image();
+      fullImg.onload = () => {
+        // Hala aynı görsel gösteriliyorsa tam boyutu yükle
+        if (state.open && state.buttons[state.index] === button) {
+          imageEl.src = fullSrc;
+          imageEl.classList.remove("loading");
+        }
+        fullSizeLoading = false;
+      };
+      fullImg.onerror = () => {
+        imageEl.classList.remove("loading");
+        fullSizeLoading = false;
+      };
+      fullImg.src = fullSrc;
+    } else {
+      imageEl.classList.remove("loading");
+    }
   };
 
   const openModal = (button) => {
@@ -130,6 +194,7 @@ function setupGalleryPopups(root, state) {
     modal.hidden = true;
     imageEl.src = "";
     imageEl.alt = "";
+    imageEl.classList.remove("loading");
     captionEl.textContent = "";
     document.body.classList.remove("presentation-modal-open");
     state.open = false;
@@ -164,3 +229,4 @@ function setupGalleryPopups(root, state) {
 
   modal.querySelector(".presentation-image-modal__close")?.addEventListener("click", closeModal);
 }
+

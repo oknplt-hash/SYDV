@@ -24,7 +24,9 @@
                             <div class="presentation-profile">
                                 <div class="presentation-avatar">
                                     {% if slide.person.has_profile_photo %}
-                                        <img src="{{ url_for('profile_photo', person_id=slide.person.id) }}" alt="{{ slide.person.full_name }}">
+                                        <img src="{{ url_for('profile_photo_thumb', person_id=slide.person.id) }}" 
+                                             alt="{{ slide.person.full_name }}"
+                                             loading="lazy">
                                     {% else %}
                                         <div class="presentation-avatar-placeholder">
                                             <span aria-hidden="true">SY</span>
@@ -97,7 +99,8 @@
                                                     class="gallery-dot"
                                                     data-gallery="slide-{{ slide_index }}"
                                                     data-index="{{ loop.index0 }}"
-                                                    data-image="{{ url_for('household_image', image_id=image.id) }}"
+                                                    data-image="{{ url_for('household_image_thumb', image_id=image.id) }}"
+                                                    data-fullsrc="{{ url_for('household_image', image_id=image.id) }}"
                                                     data-caption="{{ image.filename or 'Hane fotografi' }}"
                                                 >
                                                     {{ loop.index }}

@@ -7,6 +7,7 @@ from io import BytesIO
 import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
+from PIL import Image
 
 from flask import (
     Flask,
@@ -368,7 +369,6 @@ def create_app():
                 (title, meeting_date, description, now, agenda_id),
             )
         db.commit()
-        db.commit()
         flash("Gündem güncellendi.", "success")
         return redirect(url_for("edit_agenda", agenda_id=agenda_id))
 
@@ -704,32 +704,65 @@ def create_app():
             )
             items = cursor.fetchall()
 
+        # N+1 sorgu optimizasyonu: Tüm person_id'leri topla
+        person_ids = list(set(row["person_id"] for row in items))
+        
+        # Tüm assistance_records'ları tek sorguda çek
+        assistance_map = {}
+        household_images_map = {}
+        
+        if person_ids:
+            with db.cursor() as cursor:
+                # Assistance records - ROW_NUMBER ile her kişi için son 2 kaydı al
+                cursor.execute(
+                    """
+                    SELECT person_id, assistance_type, assistance_date, assistance_amount
+                    FROM (
+                        SELECT person_id, assistance_type, assistance_date, assistance_amount,
+                               ROW_NUMBER() OVER (PARTITION BY person_id ORDER BY assistance_date DESC, id DESC) as rn
+                        FROM assistance_records
+                        WHERE person_id = ANY(%s)
+                    ) ranked
+                    WHERE rn <= 2
+                    ORDER BY person_id, rn
+                    """,
+                    (person_ids,),
+                )
+                for record in cursor.fetchall():
+                    pid = record["person_id"]
+                    if pid not in assistance_map:
+                        assistance_map[pid] = []
+                    assistance_map[pid].append({
+                        "assistance_type": record["assistance_type"],
+                        "assistance_date": record["assistance_date"],
+                        "assistance_amount": record["assistance_amount"],
+                    })
+                
+                # Household images
+                cursor.execute(
+                    """
+                    SELECT id, person_id, filename
+                    FROM household_images
+                    WHERE person_id = ANY(%s)
+                    ORDER BY person_id, id
+                    """,
+                    (person_ids,),
+                )
+                for img in cursor.fetchall():
+                    pid = img["person_id"]
+                    if pid not in household_images_map:
+                        household_images_map[pid] = []
+                    household_images_map[pid].append({
+                        "id": img["id"],
+                        "filename": img["filename"],
+                    })
+
         slides = []
         for row in items:
             person_id = row["person_id"]
-            with db.cursor() as cursor:
-                cursor.execute(
-                    """
-                    SELECT assistance_type, assistance_date, assistance_amount
-                    FROM assistance_records
-                    WHERE person_id = %s
-                    ORDER BY assistance_date DESC, id DESC
-                    LIMIT 2
-                    """,
-                    (person_id,),
-                )
-                assistance_records = cursor.fetchall()
-                
-                cursor.execute(
-                    """
-                    SELECT id, filename
-                    FROM household_images
-                    WHERE person_id = %s
-                    ORDER BY id
-                    """,
-                    (person_id,),
-                )
-                household_images = cursor.fetchall()
+            assistance_records = assistance_map.get(person_id, [])
+            household_images = household_images_map.get(person_id, [])
+            
             central_assistance = []
             if row["central_assistance"]:
                 try:
@@ -1045,6 +1078,65 @@ def create_app():
             download_name=person["profile_photo_filename"] or "profil.jpg",
         )
 
+    def create_thumbnail(image_data, max_size=(200, 200), quality=80):
+        """Fotoğraftan thumbnail oluşturur."""
+        try:
+            img = Image.open(BytesIO(image_data))
+            # EXIF rotasyonunu düzelt
+            try:
+                from PIL import ExifTags
+                for orientation in ExifTags.TAGS.keys():
+                    if ExifTags.TAGS[orientation] == 'Orientation':
+                        break
+                exif = img._getexif()
+                if exif is not None:
+                    exif_orientation = exif.get(orientation)
+                    if exif_orientation == 3:
+                        img = img.rotate(180, expand=True)
+                    elif exif_orientation == 6:
+                        img = img.rotate(270, expand=True)
+                    elif exif_orientation == 8:
+                        img = img.rotate(90, expand=True)
+            except (AttributeError, KeyError, IndexError):
+                pass
+            
+            # RGBA ise RGB'ye çevir
+            if img.mode in ('RGBA', 'LA', 'P'):
+                background = Image.new('RGB', img.size, (255, 255, 255))
+                if img.mode == 'P':
+                    img = img.convert('RGBA')
+                background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+                img = background
+            elif img.mode != 'RGB':
+                img = img.convert('RGB')
+            
+            # Thumbnail oluştur (orantıyı korur)
+            img.thumbnail(max_size, Image.Resampling.LANCZOS)
+            
+            output = BytesIO()
+            img.save(output, format='JPEG', quality=quality, optimize=True)
+            output.seek(0)
+            return output
+        except Exception:
+            return None
+
+    @app.route("/person/<int:person_id>/profile_photo/thumb")
+    def profile_photo_thumb(person_id):
+        """Profil fotoğrafının küçük versiyonunu döndürür."""
+        person = fetch_person(person_id)
+        if not person["profile_photo"]:
+            abort(404)
+        
+        thumb = create_thumbnail(person["profile_photo"], max_size=(200, 200))
+        if thumb is None:
+            # Thumbnail oluşturulamazsa orijinali döndür
+            return send_file(
+                BytesIO(person["profile_photo"]),
+                mimetype=person["profile_photo_mimetype"] or "application/octet-stream",
+            )
+        
+        return send_file(thumb, mimetype="image/jpeg")
+
     @app.route("/household_image/<int:image_id>")
     def household_image(image_id):
         db = get_db()
@@ -1061,6 +1153,25 @@ def create_app():
             mimetype=image["mimetype"] or "application/octet-stream",
             download_name=image["filename"] or "hane.jpg",
         )
+
+    @app.route("/household_image/<int:image_id>/thumb")
+    def household_image_thumb(image_id):
+        """Hane fotoğrafının küçük versiyonunu döndürür."""
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute(
+                "SELECT image_data FROM household_images WHERE id = %s",
+                (image_id,),
+            )
+            image = cursor.fetchone()
+        if image is None:
+            abort(404)
+        
+        thumb = create_thumbnail(image["image_data"], max_size=(300, 300))
+        if thumb is None:
+            return send_file(BytesIO(image["image_data"]), mimetype="application/octet-stream")
+        
+        return send_file(thumb, mimetype="image/jpeg")
 
     @app.route("/check_file_no")
     def check_file_no():
