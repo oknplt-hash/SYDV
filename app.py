@@ -228,14 +228,105 @@ def create_app():
         # Calculate pagination info
         total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
         
+        # Fetch agendas for the dropdown
+        try:
+            with db.cursor() as cursor:
+                cursor.execute("SELECT id, title, description, created_at FROM agendas ORDER BY created_at DESC")
+                agendas = cursor.fetchall()
+        except Exception as e:
+            agendas = []
+            print(f"Error fetching agendas: {e}")
+
         return render_template(
             "index.html",
             persons=persons,
             total_count=total_count,
             page=page,
             per_page=per_page,
-            total_pages=total_pages
+            total_pages=total_pages,
+            agendas=agendas,
+            assistance_types=AGENDA_ASSISTANCE_TYPES
         )
+
+    @app.route("/quick_add_to_agenda", methods=["POST"])
+    def quick_add_to_agenda():
+        agenda_id = request.form.get("agenda_id")
+        file_no = request.form.get("file_no")
+        
+        # Handle multiple items
+        application_dates = [value.strip() for value in request.form.getlist("application_date[]")]
+        assistance_types = [value.strip() for value in request.form.getlist("assistance_type[]")]
+        notes_list = [value.strip() for value in request.form.getlist("notes[]")]
+
+        # Fallback for single item (if JS doesn't use [] naming or simple form submit)
+        if not application_dates and "application_date" in request.form:
+            application_dates = [request.form.get("application_date", "").strip()]
+        if not assistance_types and "assistance_type" in request.form:
+            assistance_types = [(request.form.get("assistance_type") or "").strip()]
+        if not notes_list and "notes" in request.form:
+            notes_list = [request.form.get("notes", "").strip()]
+
+        if not agenda_id or not file_no:
+            flash("Gündem ve Dosya Numarası zorunludur.", "danger")
+            return redirect(url_for("index"))
+
+        db = get_db()
+        with db.cursor() as cursor:
+            # Verify person
+            cursor.execute("SELECT id, full_name FROM persons WHERE file_no = %s", (file_no,))
+            person = cursor.fetchone()
+            
+            if not person:
+                flash(f"Dosya numaralı ({file_no}) kayıt bulunamadı.", "danger")
+                return redirect(url_for("index"))
+            
+            # Verify agenda
+            cursor.execute("SELECT id, title FROM agendas WHERE id = %s", (agenda_id,))
+            agenda = cursor.fetchone()
+            if not agenda:
+                flash("Seçilen gündem bulunamadı.", "danger")
+                return redirect(url_for("index"))
+
+            # Process items
+            max_len = max(len(application_dates), len(assistance_types), len(notes_list))
+            added_count = 0
+            
+            for idx in range(max_len):
+                raw_date = application_dates[idx] if idx < len(application_dates) else ""
+                raw_type = assistance_types[idx] if idx < len(assistance_types) else ""
+                raw_note = notes_list[idx] if idx < len(notes_list) else ""
+                
+                # Skip empty rows (where critical fields are missing)
+                if not raw_type: 
+                    continue
+                    
+                now = datetime.utcnow().isoformat()
+                cursor.execute(
+                    """
+                    INSERT INTO agenda_items (
+                        agenda_id, person_id, application_date, assistance_type, notes, created_at
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        agenda_id,
+                        person["id"],
+                        raw_date or None,
+                        raw_type,
+                        raw_note,
+                        now,
+                    )
+                )
+                added_count += 1
+                
+            db.commit()
+            
+            if added_count > 0:
+                flash(f"{person['full_name']} için {added_count} kayıt '{agenda['title']}' gündemine eklendi.", "success")
+            else:
+                flash("Eklenecek geçerli kayıt bulunamadı.", "warning")
+                
+        return redirect(url_for("index"))
 
     @app.route("/persons/search")
     def search_persons():
