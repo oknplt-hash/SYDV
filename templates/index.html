@@ -6,7 +6,10 @@
 <section class="card shadow-sm border-0">
     <div class="card-header py-2 bg-white border-0">
         <div class="d-flex align-items-center justify-content-between">
-            <h1 class="h4 mb-0">Kayitli Haneler</h1>
+            <div>
+                <h1 class="h4 mb-0 d-inline">Kayitli Haneler</h1>
+                <span class="badge bg-secondary ms-2">Toplam: {{ total_count }} kayit</span>
+            </div>
             <a href="{{ url_for('create_person') }}" class="btn btn-primary">Yeni Kayit</a>
         </div>
     </div>
@@ -15,22 +18,12 @@
             <div class="row g-2 align-items-end">
                 <div class="col-md-4">
                     <label for="search-file-no" class="form-label">Dosya No ile Ara</label>
-                    <input
-                        type="text"
-                        id="search-file-no"
-                        class="form-control"
-                        placeholder="Dosya numarasi girin"
-                        data-search-url="{{ url_for('search_persons') }}"
-                    >
+                    <input type="text" id="search-file-no" class="form-control" placeholder="Dosya numarasi girin"
+                        data-search-url="{{ url_for('search_persons') }}">
                 </div>
                 <div class="col-md-5 col-lg-4">
                     <label for="search-full-name" class="form-label">Ad Soyad ile Ara</label>
-                    <input
-                        type="text"
-                        id="search-full-name"
-                        class="form-control"
-                        placeholder="Ad soyad girin"
-                    >
+                    <input type="text" id="search-full-name" class="form-control" placeholder="Ad soyad girin">
                 </div>
                 <div class="col-md-3 col-lg-4 text-muted small">
                     Dosya numarasini yazdikca sonuclar otomatik filtrelenir.
@@ -50,48 +43,102 @@
                         <th scope="col" class="text-end">Islemler</th>
                     </tr>
                 </thead>
-                <tbody
-                    id="person-table-body"
-                    data-empty-text="Henuz kayit bulunmuyor. Ilk kaydi olusturmak icin ustteki dugmeyi kullanabilirsiniz."
-                >
+                <tbody id="person-table-body"
+                    data-empty-text="Henuz kayit bulunmuyor. Ilk kaydi olusturmak icin ustteki dugmeyi kullanabilirsiniz.">
                     {% if persons %}
-                        {% for person in persons %}
-                            <tr class="small">
-                                <td class="fw-semibold">{{ person.file_no }}</td>
-                                <td>{{ person.full_name }}</td>
-                                <td>{{ person.phone or "-" }}</td>
-                                <td>{{ person.social_security or "-" }}</td>
-                                <td>{{ person.created_at | datetimeformat }}</td>
-                                <td>{{ person.updated_at | datetimeformat }}</td>
-                                <td class="text-end">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <a
-                                            href="{{ url_for('edit_person', person_id=person.id) }}"
-                                            class="btn btn-outline-secondary"
-                                        >
-                                            Duzenle
-                                        </a>
-                                        <form
-                                            method="post"
-                                            action="{{ url_for('delete_person', person_id=person.id) }}"
-                                            onsubmit="return confirm('Kaydi silmek istediginize emin misiniz?');"
-                                        >
-                                            <button type="submit" class="btn btn-outline-danger">Sil</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %}
+                    {% for person in persons %}
+                    <tr class="small">
+                        <td class="fw-semibold">{{ person.file_no }}</td>
+                        <td>{{ person.full_name }}</td>
+                        <td>{{ person.phone or "-" }}</td>
+                        <td>{{ person.social_security or "-" }}</td>
+                        <td>{{ person.created_at | datetimeformat }}</td>
+                        <td>{{ person.updated_at | datetimeformat }}</td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{{ url_for('edit_person', person_id=person.id) }}"
+                                    class="btn btn-outline-secondary">
+                                    Duzenle
+                                </a>
+                                <form method="post" action="{{ url_for('delete_person', person_id=person.id) }}"
+                                    onsubmit="return confirm('Kaydi silmek istediginize emin misiniz?');">
+                                    <button type="submit" class="btn btn-outline-danger">Sil</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
                     {% else %}
-                        <tr class="table-empty">
-                            <td colspan="7" class="text-center text-muted py-4">
-                                Henuz kayit bulunmuyor. Ilk kaydi olusturmak icin ustteki dugmeyi kullanabilirsiniz.
-                            </td>
-                        </tr>
+                    <tr class="table-empty">
+                        <td colspan="7" class="text-center text-muted py-4">
+                            Henuz kayit bulunmuyor. Ilk kaydi olusturmak icin ustteki dugmeyi kullanabilirsiniz.
+                        </td>
+                    </tr>
                     {% endif %}
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+        <div class="card-footer bg-white border-top py-2">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted small">
+                    Sayfa {{ page }} / {{ total_pages }} ({{ ((page-1)*per_page)+1 }}-{{ [page*per_page,
+                    total_count]|min }} arasi gosteriliyor)
+                </div>
+                <nav aria-label="Sayfa navigasyonu">
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page > 1 %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('index', page=1) }}">&laquo; Ilk</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('index', page=page-1) }}">&lsaquo; Onceki</a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&laquo; Ilk</span>
+                        </li>
+                        <li class="page-item disabled">
+                            <span class="page-link">&lsaquo; Onceki</span>
+                        </li>
+                        {% endif %}
+
+                        {% set start_page = [1, page - 2]|max %}
+                        {% set end_page = [total_pages, page + 2]|min %}
+
+                        {% for p in range(start_page, end_page + 1) %}
+                        {% if p == page %}
+                        <li class="page-item active">
+                            <span class="page-link">{{ p }}</span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('index', page=p) }}">{{ p }}</a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if page < total_pages %} <li class="page-item">
+                            <a class="page-link" href="{{ url_for('index', page=page+1) }}">Sonraki &rsaquo;</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('index', page=total_pages) }}">Son &raquo;</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Sonraki &rsaquo;</span>
+                            </li>
+                            <li class="page-item disabled">
+                                <span class="page-link">Son &raquo;</span>
+                            </li>
+                            {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

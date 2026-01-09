@@ -201,18 +201,41 @@ def create_app():
     @app.route("/")
     def index():
         db = get_db()
-        query = """
-            SELECT id, file_no, full_name, phone, social_security, created_at, updated_at
-            FROM persons
-            ORDER BY created_at DESC
-        """
+        
+        # Pagination parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = 20
+        offset = (page - 1) * per_page
+        
         try:
             with db.cursor() as cursor:
-                cursor.execute(query)
+                # Get total count
+                cursor.execute("SELECT COUNT(*) as total FROM persons")
+                total_count = cursor.fetchone()['total']
+                
+                # Get paginated records
+                query = """
+                    SELECT id, file_no, full_name, phone, social_security, created_at, updated_at
+                    FROM persons
+                    ORDER BY created_at DESC
+                    LIMIT %s OFFSET %s
+                """
+                cursor.execute(query, (per_page, offset))
                 persons = cursor.fetchall()
         except Exception as e:
             return f"Database Error: {e}", 500
-        return render_template("index.html", persons=persons)
+        
+        # Calculate pagination info
+        total_pages = (total_count + per_page - 1) // per_page if total_count > 0 else 1
+        
+        return render_template(
+            "index.html",
+            persons=persons,
+            total_count=total_count,
+            page=page,
+            per_page=per_page,
+            total_pages=total_pages
+        )
 
     @app.route("/persons/search")
     def search_persons():
