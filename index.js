@@ -636,3 +636,6 @@ app.get('/api/agenda/:id/report.xlsx', async (req, res) => {
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
+
+export default app;
+
