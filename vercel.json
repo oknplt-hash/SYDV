@@ -3,11 +3,7 @@
     "rewrites": [
         {
             "source": "/api/(.*)",
-            "dest": "/index.js"
-        },
-        {
-            "source": "/(.*)",
-            "dest": "/index.html"
+            "dest": "/api/index.js"
         }
     ]
 }
