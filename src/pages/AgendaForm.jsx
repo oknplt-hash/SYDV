@@ -144,7 +144,7 @@ export function AgendaForm() {
             person_id: person.id,
             person: person,
             application_date: new Date().toISOString().split('T')[0],
-            assistance_type: HELP_TYPES[0],
+            assistance_type: "Nakit Yardımı",
             notes: '',
             _isNew: true
         };
@@ -159,7 +159,7 @@ export function AgendaForm() {
             person_id: person.id,
             person: person,
             application_date: new Date().toISOString().split('T')[0],
-            assistance_type: HELP_TYPES[0],
+            assistance_type: "Nakit Yardımı",
             notes: '',
             _isNew: true
         };
