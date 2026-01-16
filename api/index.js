@@ -449,6 +449,7 @@ app.post('/api/agenda/new', async (req, res) => {
 
 app.get('/api/agenda/:id', async (req, res) => {
     try {
+        await pool.query('ALTER TABLE agenda_items ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0');
         const agendaResult = await pool.query('SELECT * FROM agendas WHERE id = $1', [req.params.id]);
         if (agendaResult.rows.length === 0) return res.status(404).json({ error: 'Agenda not found' });
 
@@ -459,7 +460,7 @@ app.get('/api/agenda/:id', async (req, res) => {
       FROM agenda_items ai
       JOIN persons p ON p.id = ai.person_id
       WHERE ai.agenda_id = $1
-      ORDER BY ai.created_at DESC`,
+      ORDER BY ai.sort_order ASC, ai.created_at DESC`,
             [req.params.id]
         );
 
@@ -473,6 +474,33 @@ app.get('/api/agenda/:id', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
+    }
+});
+
+app.post('/api/agenda/:id/reorder', async (req, res) => {
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN');
+        await client.query('ALTER TABLE agenda_items ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0');
+
+        const { person_ids } = req.body;
+        if (!Array.isArray(person_ids)) throw new Error('Invalid person_ids array');
+
+        for (let i = 0; i < person_ids.length; i++) {
+            await client.query(
+                'UPDATE agenda_items SET sort_order = $1 WHERE agenda_id = $2 AND person_id = $3',
+                [i, req.params.id, person_ids[i]]
+            );
+        }
+
+        await client.query('COMMIT');
+        res.json({ message: 'Order updated' });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    } finally {
+        client.release();
     }
 });
 
@@ -533,6 +561,7 @@ app.delete('/api/agenda_item/:id', async (req, res) => {
 // Presentation API
 app.get('/api/agenda/:id/presentation', async (req, res) => {
     try {
+        await pool.query('ALTER TABLE agenda_items ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0');
         const agendaResult = await pool.query('SELECT * FROM agendas WHERE id = $1', [req.params.id]);
         if (agendaResult.rows.length === 0) return res.status(404).json({ error: 'Agenda not found' });
 
@@ -545,7 +574,7 @@ app.get('/api/agenda/:id/presentation', async (req, res) => {
       FROM agenda_items ai
       JOIN persons p ON p.id = ai.person_id
       WHERE ai.agenda_id = $1
-      ORDER BY ai.created_at`,
+      ORDER BY ai.sort_order ASC, ai.created_at`,
             [req.params.id]
         );
 

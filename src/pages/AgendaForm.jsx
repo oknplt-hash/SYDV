@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, ArrowLeft, Search, UserPlus, Trash2, CalendarDays, Loader2, Info, PlusCircle, Sparkles, Users, FileText } from 'lucide-react';
+import { Save, ArrowLeft, Search, UserPlus, Trash2, CalendarDays, Loader2, Info, PlusCircle, Sparkles, Users, FileText, ArrowUp, ArrowDown } from 'lucide-react';
 
 const HELP_TYPES = [
     "Gıda Yardımı",
@@ -201,28 +201,40 @@ export function AgendaForm() {
     }
 
     // Group items by person for cleaner UI
-    // Sort groups: Latest added/modified item determines group position (LIFO)
-    const groupedItemsParams = items.reduce((acc, item) => {
-        const personId = item.person.id;
-        if (!acc[personId]) {
-            acc[personId] = {
+    // Group items attempting to preserve array order (which matches backend sort)
+    const groupsMap = new Map();
+    items.forEach(item => {
+        if (!groupsMap.has(item.person.id)) {
+            groupsMap.set(item.person.id, {
                 person: item.person,
                 assistances: [],
-                latestDate: new Date(item.created_at || new Date().toISOString()).getTime(),
-                isNew: item._isNew
-            };
+            });
         }
-        acc[personId].assistances.push(item);
-        // Update latest date if this item is newer or it's a new item being added now
-        const itemDate = item._isNew ? Date.now() : new Date(item.created_at || 0).getTime();
-        if (itemDate > acc[personId].latestDate) {
-            acc[personId].latestDate = itemDate;
-            acc[personId].isNew = item._isNew;
-        }
-        return acc;
-    }, {});
+        groupsMap.get(item.person.id).assistances.push(item);
+    });
 
-    const sortedGroups = Object.values(groupedItemsParams).sort((a, b) => b.latestDate - a.latestDate);
+    const sortedGroups = Array.from(groupsMap.values());
+
+    const handleMoveGroup = async (index, direction) => {
+        if (!isEditing) return;
+        if (direction === 'up' && index === 0) return;
+        if (direction === 'down' && index === sortedGroups.length - 1) return;
+
+        const newGroups = [...sortedGroups];
+        const swapIndex = direction === 'up' ? index - 1 : index + 1;
+        [newGroups[index], newGroups[swapIndex]] = [newGroups[swapIndex], newGroups[index]];
+
+        const personIds = newGroups.map(g => g.person.id);
+
+        try {
+            await axios.post(`/api/agenda/${id}/reorder`, { person_ids: personIds });
+            const response = await axios.get(`/api/agenda/${id}`);
+            setItems(response.data.items || []);
+        } catch (error) {
+            console.error("Reorder failed", error);
+            alert("Sıralama güncellenemedi.");
+        }
+    };
 
     return (
         <div className="max-w-7xl mx-auto space-y-6 pb-20">
@@ -246,7 +258,7 @@ export function AgendaForm() {
                 </div>
                 <div className="flex items-center gap-4">
                     <div className="text-right hidden sm:block">
-                        <div className="text-sm font-bold">{Object.keys(groupedItemsParams).length} Hane</div>
+                        <div className="text-sm font-bold">{sortedGroups.length} Hane</div>
                         <div className="text-xs text-muted-foreground">{items.length} Başvuru</div>
                     </div>
                 </div>
@@ -388,13 +400,33 @@ export function AgendaForm() {
                                                 #{group.person.file_no}
                                             </span>
                                         </div>
-                                        <button
-                                            onClick={() => addAnotherAssistance(group.person)}
-                                            className="text-xs font-medium text-primary hover:underline flex items-center gap-1"
-                                        >
-                                            <PlusCircle size={14} />
-                                            Ekle
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <div className="flex items-center bg-muted rounded-lg border border-border p-0.5">
+                                                <button
+                                                    onClick={() => handleMoveGroup(groupIndex, 'up')}
+                                                    disabled={groupIndex === 0}
+                                                    className="p-1 hover:bg-white dark:hover:bg-gray-800 rounded disabled:opacity-30 transition-colors"
+                                                    title="Yukarı Taşı"
+                                                >
+                                                    <ArrowUp size={14} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleMoveGroup(groupIndex, 'down')}
+                                                    disabled={groupIndex === sortedGroups.length - 1}
+                                                    className="p-1 hover:bg-white dark:hover:bg-gray-800 rounded disabled:opacity-30 transition-colors"
+                                                    title="Aşağı Taşı"
+                                                >
+                                                    <ArrowDown size={14} />
+                                                </button>
+                                            </div>
+                                            <button
+                                                onClick={() => addAnotherAssistance(group.person)}
+                                                className="text-xs font-semibold px-2 py-1 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-colors flex items-center gap-1"
+                                            >
+                                                <PlusCircle size={14} />
+                                                Ekle
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {/* Items List */}
