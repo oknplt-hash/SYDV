@@ -60,7 +60,7 @@ export function PersonForm() {
         if (isEditing) {
             const fetchPerson = async () => {
                 try {
-                    const response = await axios.get(`/api/person/${id}`);
+                    const response = await api.get(`/person/${id}`);
                     const data = response.data;
                     setFormData({
                         file_no: data.file_no || '',
