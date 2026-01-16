@@ -142,12 +142,15 @@ export function Persons() {
         setAssistanceItems(updated);
     };
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     const addPersonToAgenda = async () => {
         if (!selectedAgendaId) {
             alert("Lütfen bir gündem seçin");
             return;
         }
 
+        setIsSubmitting(true);
         try {
             // Add all assistance items
             for (const item of assistanceItems) {
@@ -171,6 +174,8 @@ export function Persons() {
         } catch (error) {
             console.error("Error adding to agenda:", error);
             alert("Gündeme eklenirken bir hata oluştu.");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -465,9 +470,10 @@ export function Persons() {
                                 </button>
                                 <button
                                     onClick={addPersonToAgenda}
-                                    className="px-3 py-1.5 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90"
+                                    disabled={isSubmitting}
+                                    className="px-3 py-1.5 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Gündeme Ekle ({assistanceItems.length} başvuru)
+                                    {isSubmitting ? 'Ekleniyor...' : `Gündeme Ekle (${assistanceItems.length} başvuru)`}
                                 </button>
                             </div>
                         )}
