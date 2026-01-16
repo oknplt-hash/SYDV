@@ -12,8 +12,8 @@ export function Sidebar() {
     return (
         <aside className="w-64 border-r bg-card flex flex-col">
             <div className="p-6 border-b">
-                <h1 className="text-xl font-bold text-primary">Sosyal Yardım</h1>
-                <p className="text-xs text-muted-foreground">Admin Paneli</p>
+                <h1 className="text-xl font-bold text-primary">Şiran SYDV</h1>
+                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Gündem Sistemi</p>
             </div>
             <nav className="flex-1 p-4 space-y-2">
                 {navItems.map((item) => (
