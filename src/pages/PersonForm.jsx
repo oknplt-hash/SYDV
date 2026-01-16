@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Save, ArrowLeft, Plus, Trash2, Camera, Upload, X } from 'lucide-react';
 
@@ -218,16 +218,11 @@ export function PersonForm() {
         }
 
         try {
-            const isProd = import.meta.env.PROD;
-            const baseUrl = isProd ? '' : 'http://localhost:5000';
-            const endpoint = isEditing ? `/api/person/${id}/edit?api=true` : `/api/person/new?api=true`;
-            const fullUrl = `${baseUrl}${endpoint}`;
+            const url = isEditing ? `/person/${id}/edit?api=true` : `/person/new?api=true`;
 
-            console.log("Submitting to API URL:", fullUrl);
-
-            await axios.post(fullUrl, submitData, {
+            await api.post(url, submitData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
-                timeout: 30000
+                timeout: 60000
             });
             navigate('/persons');
         } catch (error) {
@@ -620,7 +615,7 @@ export function PersonForm() {
                                     <input
                                         type="month"
                                         className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all font-medium"
-                                        value={rec.assistance_date}
+                                        value={rec.assistance_date ? rec.assistance_date.slice(0, 7) : ''}
                                         onChange={(e) => handleAssistanceChange(idx, 'assistance_date', e.target.value)}
                                     />
                                 </div>
