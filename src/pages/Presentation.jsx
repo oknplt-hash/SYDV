@@ -326,9 +326,11 @@ export function Presentation() {
                                         </div>
                                         <div className="flex flex-wrap gap-2">
                                             {currentSlide.central_assistance.map((item, idx) => (
-                                                <span key={idx} className="px-3 py-1 bg-violet-50 text-violet-600 rounded-lg text-xs font-bold border border-violet-100">
-                                                    {typeof item === 'string' ? item : item.type}
-                                                </span>
+                                                item ? (
+                                                    <span key={idx} className="px-3 py-1 bg-violet-50 text-violet-600 rounded-lg text-xs font-bold border border-violet-100">
+                                                        {typeof item === 'string' ? item : item.type || '-'}
+                                                    </span>
+                                                ) : null
                                             ))}
                                         </div>
                                     </div>
