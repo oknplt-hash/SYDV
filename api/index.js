@@ -271,16 +271,25 @@ app.post('/api/person/new', upload.fields([
     }
 });
 
+const ensureArray = (val) => {
+    if (val === undefined || val === null) return [];
+    return Array.isArray(val) ? val : [val];
+};
+
 app.post('/api/person/:id/edit', upload.fields([
     { name: 'profile_photo', maxCount: 1 },
     { name: 'household_images' }
 ]), async (req, res) => {
+    console.log(`[EDIT] Request received for ID: ${req.params.id}`);
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
         const personId = req.params.id;
         const b = req.body;
+        console.log('[EDIT] Body parsed. Processing...');
+
         const now = new Date().toISOString();
+        const centralAssistance = ensureArray(b.central_assistance);
 
         await client.query(
             `UPDATE persons
@@ -293,31 +302,35 @@ app.post('/api/person/:id/edit', upload.fields([
             [
                 b.file_no, b.full_name, b.national_id, b.birth_date || null, b.spouse_name, parseIntSafe(b.household_size),
                 parseIntSafe(b.children_count), parseIntSafe(b.student_count), b.phone, b.address, b.social_security,
-                b.disability_status, b.disability_rate || null, JSON.stringify(req.body.central_assistance || []),
+                b.disability_status, b.disability_rate || null, JSON.stringify(centralAssistance),
                 b.household_description, parseFloatSafe(b.household_income), parseFloatSafe(b.per_capita_income),
                 now, personId
             ]
         );
+        console.log('[EDIT] Main record updated.');
 
-        if (req.files.profile_photo) {
+        if (req.files && req.files.profile_photo) {
             const f = req.files.profile_photo[0];
             await client.query(
                 'UPDATE persons SET profile_photo = $1, profile_photo_filename = $2, profile_photo_mimetype = $3 WHERE id = $4',
                 [f.buffer, f.originalname, f.mimetype, personId]
             );
+            console.log('[EDIT] Profile photo updated.');
         }
 
         // Deletions
-        const deleteImageIds = Array.isArray(b.delete_image_ids) ? b.delete_image_ids : [b.delete_image_ids].filter(Boolean);
+        const deleteImageIds = ensureArray(b.delete_image_ids).filter(Boolean);
         if (deleteImageIds.length > 0) {
             await client.query('DELETE FROM household_images WHERE person_id = $1 AND id = ANY($2)', [personId, deleteImageIds]);
+            console.log('[EDIT] Images deleted.');
         }
 
         // Assistance Records Replacement
         await client.query('DELETE FROM assistance_records WHERE person_id = $1', [personId]);
-        const types = Array.isArray(b['assistance_type[]']) ? b['assistance_type[]'] : [b['assistance_type[]']].filter(Boolean);
-        const dates = Array.isArray(b['assistance_date[]']) ? b['assistance_date[]'] : [b['assistance_date[]']].filter(Boolean);
-        const amounts = Array.isArray(b['assistance_amount[]']) ? b['assistance_amount[]'] : [b['assistance_amount[]']].filter(Boolean);
+
+        const types = ensureArray(b['assistance_type[]']);
+        const dates = ensureArray(b['assistance_date[]']);
+        const amounts = ensureArray(b['assistance_amount[]']);
 
         for (let i = 0; i < types.length; i++) {
             if (types[i] || dates[i] || amounts[i]) {
@@ -327,22 +340,25 @@ app.post('/api/person/:id/edit', upload.fields([
                 );
             }
         }
+        console.log('[EDIT] Assistance records updated.');
 
         // New Images
-        if (req.files.household_images) {
+        if (req.files && req.files.household_images) {
             for (const file of req.files.household_images) {
                 await client.query(
                     'INSERT INTO household_images (person_id, image_data, filename, mimetype, created_at) VALUES ($1, $2, $3, $4, $5)',
                     [personId, file.buffer, file.originalname, file.mimetype, now]
                 );
             }
+            console.log('[EDIT] New images inserted.');
         }
 
         await client.query('COMMIT');
+        console.log('[EDIT] Transaction committed.');
         res.json({ message: 'Success', id: personId });
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error(error);
+        console.error('[EDIT] ERROR:', error);
         res.status(500).json({ error: error.message });
     } finally {
         client.release();
