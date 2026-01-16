@@ -574,7 +574,7 @@ app.get('/api/agenda/:id/presentation', async (req, res) => {
       FROM agenda_items ai
       JOIN persons p ON p.id = ai.person_id
       WHERE ai.agenda_id = $1
-      ORDER BY ai.sort_order ASC, ai.created_at`,
+      ORDER BY ai.sort_order DESC, ai.created_at DESC`,
             [req.params.id]
         );
 
