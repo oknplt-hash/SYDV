@@ -251,42 +251,45 @@ export function Presentation() {
                         </div>
 
                         {/* Household Income Line (Horizontal) */}
-                        <div className="bg-white rounded-2xl shadow-md shadow-slate-200/50 border border-slate-100 px-6 py-2.5 flex items-center justify-between shrink-0">
-                            <div className="flex items-center gap-8">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-                                        <Briefcase size={16} className="text-emerald-600" />
+                        {(() => {
+                            const perCapitaVal = parseFloat(person.per_capita_income || 0);
+                            const isAbovePoverty = perCapitaVal >= 9358.5;
+                            return (
+                                <div className={`rounded-2xl shadow-md px-6 py-2.5 flex items-center justify-between shrink-0 border transition-all duration-300 ${isAbovePoverty
+                                        ? 'bg-rose-50 border-rose-200 shadow-rose-100/50'
+                                        : 'bg-emerald-50 border-emerald-200 shadow-emerald-100/50'
+                                    }`}>
+                                    <div className="flex items-center gap-8">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isAbovePoverty ? 'bg-rose-100' : 'bg-emerald-100'}`}>
+                                                <Briefcase size={16} className={isAbovePoverty ? 'text-rose-600' : 'text-emerald-600'} />
+                                            </div>
+                                            <div>
+                                                <p className={`text-[9px] uppercase font-bold leading-none ${isAbovePoverty ? 'text-rose-400' : 'text-emerald-400'}`}>Toplam Gelir</p>
+                                                <p className={`text-sm font-bold ${isAbovePoverty ? 'text-rose-900' : 'text-emerald-900'}`}>{parseFloat(person.household_income || 0).toLocaleString('tr-TR')} ₺</p>
+                                            </div>
+                                        </div>
+                                        <div className={`w-px h-6 ${isAbovePoverty ? 'bg-rose-200' : 'bg-emerald-200'}`}></div>
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isAbovePoverty ? 'bg-rose-100' : 'bg-emerald-100'}`}>
+                                                <Users size={16} className={isAbovePoverty ? 'text-rose-600' : 'text-emerald-600'} />
+                                            </div>
+                                            <div>
+                                                <p className={`text-[9px] uppercase font-bold leading-none ${isAbovePoverty ? 'text-rose-400' : 'text-emerald-400'}`}>Kişi Başı Gelir</p>
+                                                <p className={`text-sm font-bold ${isAbovePoverty ? 'text-rose-900' : 'text-emerald-900'}`}>{parseFloat(person.per_capita_income || 0).toLocaleString('tr-TR')} ₺</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-[9px] text-slate-400 uppercase font-bold leading-none">Toplam Gelir</p>
-                                        <p className="text-sm font-bold text-slate-700">{parseFloat(person.household_income || 0).toLocaleString('tr-TR')} ₺</p>
-                                    </div>
-                                </div>
-                                <div className="w-px h-6 bg-slate-100"></div>
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                                        <Users size={16} className="text-blue-600" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[9px] text-slate-400 uppercase font-bold leading-none">Kişi Başı Gelir</p>
-                                        <p className="text-sm font-bold text-slate-700">{parseFloat(person.per_capita_income || 0).toLocaleString('tr-TR')} ₺</p>
-                                    </div>
-                                </div>
-                            </div>
 
-                            {(() => {
-                                const perCapitaVal = parseFloat(person.per_capita_income || 0);
-                                const isAbovePoverty = perCapitaVal >= 9358.5;
-                                return (
-                                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${isAbovePoverty ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}>
-                                        <div className={`w-2 h-2 rounded-full ${isAbovePoverty ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`}></div>
-                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${isAbovePoverty ? 'text-rose-600' : 'text-emerald-600'}`}>
+                                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border shadow-sm ${isAbovePoverty ? 'bg-white border-rose-200' : 'bg-white border-emerald-200'}`}>
+                                        <div className={`w-2 h-2 rounded-full animate-pulse ${isAbovePoverty ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`}></div>
+                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${isAbovePoverty ? 'text-rose-700' : 'text-emerald-700'}`}>
                                             {isAbovePoverty ? 'Hane Muhtaçlık Sınırının Üzerinde' : 'Hane Muhtaçlık Sınırının Altında'}
                                         </span>
                                     </div>
-                                );
-                            })()}
-                        </div>
+                                </div>
+                            );
+                        })()}
 
                         {/* Middle Row */}
                         <div className="flex-1 flex gap-5 min-h-0">
