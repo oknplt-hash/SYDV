@@ -1,7 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Save, ArrowLeft, Search, UserPlus, Trash2, CalendarDays, Loader2, Info, PlusCircle, Sparkles, Users, FileText, ArrowUp, ArrowDown } from 'lucide-react';
+import { Save, ArrowLeft, Search, UserPlus, Trash2, CalendarDays, Loader2, Info, PlusCircle, Sparkles, Users, FileText, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
+
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const HELP_TYPES = [
     "Gıda Yardımı",
@@ -23,6 +40,128 @@ const HELP_TYPES = [
     "Doğalgaz Yardımı",
     "Diğer Yardım"
 ];
+
+const SortableHousehold = ({ group, groupIndex, totalGroups, handleMoveGroup, addAnotherAssistance, handleItemChange, handleRemoveItem, HELP_TYPES }) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: group.person.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 50 : 1,
+        position: 'relative',
+        opacity: isDragging ? 0.3 : 1,
+    };
+
+    return (
+        <div ref={setNodeRef} style={style} className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+            {/* Group Header */}
+            <div className="bg-muted/30 px-4 py-2 flex items-center justify-between border-b border-border">
+                <div className="flex items-center gap-3">
+                    <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 -ml-2 text-muted-foreground hover:text-foreground touch-none bg-muted/50 rounded-md">
+                        <GripVertical size={18} />
+                    </div>
+                    <span className="font-bold text-sm text-foreground">{group.person.full_name}</span>
+                    <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
+                        #{group.person.file_no}
+                    </span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="flex items-center bg-muted rounded-lg border border-border p-0.5">
+                        <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleMoveGroup(groupIndex, 'up'); }}
+                            disabled={groupIndex === 0}
+                            className="p-1 hover:bg-white dark:hover:bg-gray-800 rounded disabled:opacity-30 transition-colors"
+                            title="Yukarı Taşı"
+                        >
+                            <ArrowUp size={14} />
+                        </button>
+                        <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleMoveGroup(groupIndex, 'down'); }}
+                            disabled={groupIndex === totalGroups - 1}
+                            className="p-1 hover:bg-white dark:hover:bg-gray-800 rounded disabled:opacity-30 transition-colors"
+                            title="Aşağı Taşı"
+                        >
+                            <ArrowDown size={14} />
+                        </button>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => addAnotherAssistance(group.person)}
+                        className="text-xs font-semibold px-2 py-1 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-colors flex items-center gap-1"
+                    >
+                        <PlusCircle size={14} />
+                        Ekle
+                    </button>
+                </div>
+            </div>
+
+            {/* Items List */}
+            <div className="divide-y divide-border">
+                {group.assistances.map((item, idx) => (
+                    <div key={item.id} className={`p-3 flex gap-4 items-start ${item._isNew ? 'bg-primary/5' : ''}`}>
+                        <div className="pt-1.5 text-xs text-muted-foreground font-mono w-4">
+                            {idx + 1}
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-12 flex-1">
+                            {/* Type */}
+                            <div className="sm:col-span-3">
+                                <select
+                                    className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs focus:ring-1 focus:ring-primary"
+                                    value={item.assistance_type || ''}
+                                    onChange={(e) => handleItemChange(item.id, 'assistance_type', e.target.value)}
+                                >
+                                    {HELP_TYPES.map(type => (
+                                        <option key={type} value={type}>{type}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Date */}
+                            <div className="sm:col-span-3">
+                                <input
+                                    type="date"
+                                    className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs focus:ring-1 focus:ring-primary"
+                                    value={item.application_date ? item.application_date.split('T')[0] : ''}
+                                    onChange={(e) => handleItemChange(item.id, 'application_date', e.target.value)}
+                                />
+                            </div>
+
+                            {/* Notes */}
+                            <div className="sm:col-span-6">
+                                <input
+                                    type="text"
+                                    className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs focus:ring-1 focus:ring-primary"
+                                    placeholder="Notlar..."
+                                    value={item.notes || ''}
+                                    onChange={(e) => handleItemChange(item.id, 'notes', e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => handleRemoveItem(item)}
+                            className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
+                            title="Sil"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
 
 export function AgendaForm() {
     const { id } = useParams();
@@ -58,6 +197,7 @@ export function AgendaForm() {
                 meeting_date: data.meeting_date ? data.meeting_date.split('T')[0] : '',
                 description: data.description || ''
             });
+            // Items are already sorted by backend (sort_order ASC, created_at DESC)
             setItems(data.items || []);
         } catch (error) {
             console.error("Error fetching agenda:", error);
@@ -102,6 +242,19 @@ export function AgendaForm() {
                         notes: item.notes
                     });
                 }
+            }
+
+            // After saving all items, save the final order if editing
+            const personIds = [];
+            const seenOrder = new Set();
+            items.forEach(item => {
+                if (!seenOrder.has(item.person.id)) {
+                    personIds.push(item.person.id);
+                    seenOrder.add(item.person.id);
+                }
+            });
+            if (personIds.length > 0) {
+                await axios.post(`/api/agenda/${agendaId}/reorder`, { person_ids: personIds });
             }
 
             navigate('/agendas');
@@ -188,20 +341,7 @@ export function AgendaForm() {
         }
     };
 
-    if (initialLoading) {
-        return (
-            <div className="flex flex-col items-center justify-center p-16 space-y-4">
-                <div className="relative">
-                    <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                    <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-purple-600 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
-                </div>
-                <p className="text-muted-foreground font-medium">Gündem yükleniyor...</p>
-            </div>
-        );
-    }
-
     // Group items by person for cleaner UI
-    // Group items attempting to preserve array order (which matches backend sort)
     const groupsMap = new Map();
     items.forEach(item => {
         if (!groupsMap.has(item.person.id)) {
@@ -215,8 +355,39 @@ export function AgendaForm() {
 
     const sortedGroups = Array.from(groupsMap.values());
 
-    const handleMoveGroup = async (index, direction) => {
-        if (!isEditing) return;
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEnd = (event) => {
+        const { active, over } = event;
+        if (!over || active.id === over.id) return;
+
+        setItems((prevItems) => {
+            const currentGroupsMap = new Map();
+            prevItems.forEach(item => {
+                const pid = item.person.id;
+                if (!currentGroupsMap.has(pid)) currentGroupsMap.set(pid, []);
+                currentGroupsMap.get(pid).push(item);
+            });
+
+            const pids = Array.from(currentGroupsMap.keys());
+            const oldIndex = pids.indexOf(active.id);
+            const newIndex = pids.indexOf(over.id);
+
+            const newPids = arrayMove(pids, oldIndex, newIndex);
+            const newItems = [];
+            newPids.forEach(pid => {
+                newItems.push(...currentGroupsMap.get(pid));
+            });
+            return newItems;
+        });
+    };
+
+    const handleMoveGroup = (index, direction) => {
         if (direction === 'up' && index === 0) return;
         if (direction === 'down' && index === sortedGroups.length - 1) return;
 
@@ -224,17 +395,25 @@ export function AgendaForm() {
         const swapIndex = direction === 'up' ? index - 1 : index + 1;
         [newGroups[index], newGroups[swapIndex]] = [newGroups[swapIndex], newGroups[index]];
 
-        const personIds = newGroups.map(g => g.person.id);
-
-        try {
-            await axios.post(`/api/agenda/${id}/reorder`, { person_ids: personIds });
-            const response = await axios.get(`/api/agenda/${id}`);
-            setItems(response.data.items || []);
-        } catch (error) {
-            console.error("Reorder failed", error);
-            alert("Sıralama güncellenemedi.");
-        }
+        // Update items state based on new group order
+        const newItems = [];
+        newGroups.forEach(g => {
+            newItems.push(...g.assistances);
+        });
+        setItems(newItems);
     };
+
+    if (initialLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center p-16 space-y-4">
+                <div className="relative">
+                    <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-purple-600 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1s' }}></div>
+                </div>
+                <p className="text-muted-foreground font-medium">Gündem yükleniyor...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-7xl mx-auto space-y-6 pb-20">
@@ -387,104 +566,32 @@ export function AgendaForm() {
                                 <p className="text-sm text-muted-foreground">Henüz başvuru yok.</p>
                             </div>
                         ) : (
-                            sortedGroups.map((group, groupIndex) => (
-                                <div
-                                    key={group.person.id}
-                                    className="bg-card border border-border rounded-xl shadow-sm overflow-hidden"
+                            <DndContext
+                                sensors={sensors}
+                                collisionDetection={closestCenter}
+                                onDragEnd={handleDragEnd}
+                            >
+                                <SortableContext
+                                    items={sortedGroups.map(g => g.person.id)}
+                                    strategy={verticalListSortingStrategy}
                                 >
-                                    {/* Group Header */}
-                                    <div className="bg-muted/30 px-4 py-2 flex items-center justify-between border-b border-border">
-                                        <div className="flex items-center gap-3">
-                                            <span className="font-bold text-sm text-foreground">{group.person.full_name}</span>
-                                            <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
-                                                #{group.person.file_no}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <div className="flex items-center bg-muted rounded-lg border border-border p-0.5">
-                                                <button
-                                                    onClick={() => handleMoveGroup(groupIndex, 'up')}
-                                                    disabled={groupIndex === 0}
-                                                    className="p-1 hover:bg-white dark:hover:bg-gray-800 rounded disabled:opacity-30 transition-colors"
-                                                    title="Yukarı Taşı"
-                                                >
-                                                    <ArrowUp size={14} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleMoveGroup(groupIndex, 'down')}
-                                                    disabled={groupIndex === sortedGroups.length - 1}
-                                                    className="p-1 hover:bg-white dark:hover:bg-gray-800 rounded disabled:opacity-30 transition-colors"
-                                                    title="Aşağı Taşı"
-                                                >
-                                                    <ArrowDown size={14} />
-                                                </button>
-                                            </div>
-                                            <button
-                                                onClick={() => addAnotherAssistance(group.person)}
-                                                className="text-xs font-semibold px-2 py-1 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-colors flex items-center gap-1"
-                                            >
-                                                <PlusCircle size={14} />
-                                                Ekle
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Items List */}
-                                    <div className="divide-y divide-border">
-                                        {group.assistances.map((item, idx) => (
-                                            <div key={item.id} className={`p-3 flex gap-4 items-start ${item._isNew ? 'bg-primary/5' : ''}`}>
-                                                <div className="pt-1.5 text-xs text-muted-foreground font-mono w-4">
-                                                    {idx + 1}
-                                                </div>
-
-                                                <div className="grid gap-3 sm:grid-cols-12 flex-1">
-                                                    {/* Type */}
-                                                    <div className="sm:col-span-3">
-                                                        <select
-                                                            className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs focus:ring-1 focus:ring-primary"
-                                                            value={item.assistance_type || ''}
-                                                            onChange={(e) => handleItemChange(item.id, 'assistance_type', e.target.value)}
-                                                        >
-                                                            {HELP_TYPES.map(type => (
-                                                                <option key={type} value={type}>{type}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-
-                                                    {/* Date */}
-                                                    <div className="sm:col-span-3">
-                                                        <input
-                                                            type="date"
-                                                            className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs focus:ring-1 focus:ring-primary"
-                                                            value={item.application_date ? item.application_date.split('T')[0] : ''}
-                                                            onChange={(e) => handleItemChange(item.id, 'application_date', e.target.value)}
-                                                        />
-                                                    </div>
-
-                                                    {/* Notes */}
-                                                    <div className="sm:col-span-6">
-                                                        <input
-                                                            type="text"
-                                                            className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs focus:ring-1 focus:ring-primary"
-                                                            placeholder="Notlar..."
-                                                            value={item.notes || ''}
-                                                            onChange={(e) => handleItemChange(item.id, 'notes', e.target.value)}
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <button
-                                                    onClick={() => handleRemoveItem(item)}
-                                                    className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
-                                                    title="Sil"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
+                                    <div className="space-y-3">
+                                        {sortedGroups.map((group, groupIndex) => (
+                                            <SortableHousehold
+                                                key={group.person.id}
+                                                group={group}
+                                                groupIndex={groupIndex}
+                                                totalGroups={sortedGroups.length}
+                                                handleMoveGroup={handleMoveGroup}
+                                                addAnotherAssistance={addAnotherAssistance}
+                                                handleItemChange={handleItemChange}
+                                                handleRemoveItem={handleRemoveItem}
+                                                HELP_TYPES={HELP_TYPES}
+                                            />
                                         ))}
                                     </div>
-                                </div>
-                            ))
+                                </SortableContext>
+                            </DndContext>
                         )}
                     </div>
                 </div>
