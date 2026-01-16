@@ -350,12 +350,27 @@ app.post('/api/person/:id/edit', upload.fields([
 });
 
 app.delete('/api/person/:id', async (req, res) => {
+    const client = await pool.connect();
     try {
-        await pool.query('DELETE FROM persons WHERE id = $1', [req.params.id]);
+        await client.query('BEGIN');
+        const personId = req.params.id;
+
+        // Delete related records first (cascade manually)
+        await client.query('DELETE FROM agenda_items WHERE person_id = $1', [personId]);
+        await client.query('DELETE FROM assistance_records WHERE person_id = $1', [personId]);
+        await client.query('DELETE FROM household_images WHERE person_id = $1', [personId]);
+
+        // Delete the person
+        await client.query('DELETE FROM persons WHERE id = $1', [personId]);
+
+        await client.query('COMMIT');
         res.json({ message: 'Deleted' });
     } catch (error) {
+        await client.query('ROLLBACK');
         console.error(error);
         res.status(500).json({ error: error.message });
+    } finally {
+        client.release();
     }
 });
 

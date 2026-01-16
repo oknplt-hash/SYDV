@@ -91,7 +91,7 @@ export function Persons() {
     const handleDelete = async (id) => {
         if (!window.confirm("Bu kaydı silmek istediğinize emin misiniz?")) return;
         try {
-            await axios.post(`/api/person/${id}/delete?api=true`);
+            await axios.delete(`/api/person/${id}`);
             fetchPersons(pagination.page);
         } catch (error) {
             console.error("Error deleting person:", error);
