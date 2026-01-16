@@ -186,7 +186,8 @@ export function PersonForm() {
         const submitData = new FormData();
         Object.keys(formData).forEach(key => {
             if (key === 'central_assistance') {
-                formData[key].forEach(val => submitData.append('central_assistance', val));
+                const ca = Array.isArray(formData[key]) ? formData[key] : [];
+                ca.forEach(val => submitData.append('central_assistance', val));
             } else {
                 submitData.append(key, formData[key] || '');
             }
@@ -196,19 +197,25 @@ export function PersonForm() {
             submitData.append('profile_photo', profilePhoto);
         }
 
-        householdImages.forEach(file => {
-            submitData.append('household_images', file);
-        });
+        if (Array.isArray(householdImages)) {
+            householdImages.forEach(file => {
+                submitData.append('household_images', file);
+            });
+        }
 
-        assistanceRecords.forEach(rec => {
-            submitData.append('assistance_type[]', rec.assistance_type);
-            submitData.append('assistance_date[]', rec.assistance_date);
-            submitData.append('assistance_amount[]', rec.assistance_amount);
-        });
+        if (Array.isArray(assistanceRecords)) {
+            assistanceRecords.forEach(rec => {
+                submitData.append('assistance_type[]', rec.assistance_type || '');
+                submitData.append('assistance_date[]', rec.assistance_date || '');
+                submitData.append('assistance_amount[]', rec.assistance_amount || '');
+            });
+        }
 
-        deleteImageIds.forEach(imgId => {
-            submitData.append('delete_image_ids', imgId);
-        });
+        if (Array.isArray(deleteImageIds)) {
+            deleteImageIds.forEach(imgId => {
+                submitData.append('delete_image_ids', imgId);
+            });
+        }
 
         try {
             const isProd = import.meta.env.PROD;
