@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api';
+import axios from 'axios';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Save, ArrowLeft, Plus, Trash2, Camera, Upload, X } from 'lucide-react';
 
@@ -211,10 +211,16 @@ export function PersonForm() {
         });
 
         try {
-            const url = isEditing ? `/person/${id}/edit?api=true` : `/person/new?api=true`;
-            await api.post(url, submitData, {
+            const isProd = import.meta.env.PROD;
+            const baseUrl = isProd ? '' : 'http://localhost:5000';
+            const endpoint = isEditing ? `/api/person/${id}/edit?api=true` : `/api/person/new?api=true`;
+            const fullUrl = `${baseUrl}${endpoint}`;
+
+            console.log("Submitting to API URL:", fullUrl);
+
+            await axios.post(fullUrl, submitData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
-                timeout: 60000 // 60 seconds timeout for uploads
+                timeout: 30000
             });
             navigate('/persons');
         } catch (error) {
