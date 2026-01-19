@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, X, User, MapPin, Phone, Heart, Briefcase, Home, Users, FileText, Image, ArrowLeft, ArrowRight, GraduationCap, Baby, Shield, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, User, MapPin, Phone, Heart, Briefcase, Home, Users, FileText, Image, ArrowLeft, ArrowRight, GraduationCap, Baby, Shield, Info, Edit } from 'lucide-react';
+import { PersonForm } from './PersonForm';
 
 export function Presentation() {
     const { id } = useParams();
@@ -11,6 +12,7 @@ export function Presentation() {
     const [loading, setLoading] = useState(true);
     const [showImagePopup, setShowImagePopup] = useState(false);
     const [popupImageIndex, setPopupImageIndex] = useState(0);
+    const [showEditModal, setShowEditModal] = useState(false);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -27,6 +29,15 @@ export function Presentation() {
         };
         fetchData();
     }, [id, navigate]);
+
+    const refreshData = async () => {
+        try {
+            const response = await axios.get(`/api/agenda/${id}/presentation?api=true`);
+            setData(response.data);
+        } catch (error) {
+            console.error("Refresh error:", error);
+        }
+    };
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -109,8 +120,8 @@ export function Presentation() {
             {/* Main Content - NO HEADER */}
             <main className="flex-1 p-6 overflow-hidden">
                 <div className={`h-full max-w-[1400px] mx-auto flex gap-6 p-2 rounded-[2.5rem] transition-all duration-500 ${isAbovePoverty
-                        ? 'ring-8 ring-rose-500/20 shadow-[0_0_50px_rgba(244,63,94,0.15)] bg-rose-50/[0.02]'
-                        : ''
+                    ? 'ring-8 ring-rose-500/20 shadow-[0_0_50px_rgba(244,63,94,0.15)] bg-rose-50/[0.02]'
+                    : ''
                     }`}>
 
                     {/* Left Column - Profile Card */}
@@ -140,7 +151,14 @@ export function Presentation() {
 
                                 <div className="flex justify-center gap-2 mb-5">
                                     <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold">{person.age || '?'} Yaş</span>
-                                    <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold">#{person.file_no}</span>
+                                    <button
+                                        onClick={() => setShowEditModal(true)}
+                                        className="group flex items-center gap-1.5 px-3 py-1 bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg text-xs font-bold transition-all border border-transparent hover:border-indigo-200"
+                                        title="Hane Bilgilerini Düzenle"
+                                    >
+                                        <Edit size={12} className="group-hover:scale-110 transition-transform" />
+                                        <span>#{person.file_no}</span>
+                                    </button>
                                 </div>
 
                                 {/* Quick Stats - 4 columns */}
@@ -434,6 +452,43 @@ export function Presentation() {
                                 {idx + 1}
                             </button>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Edit Modal */}
+            {showEditModal && (
+                <div className="fixed inset-0 z-[300] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-5xl max-h-full overflow-hidden rounded-[2.5rem] shadow-2xl flex flex-col animate-in zoom-in-95 duration-300">
+                        {/* Modal Header */}
+                        <div className="flex items-center justify-between p-6 border-b shrink-0 bg-slate-50/50">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                                    <Edit size={20} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-800">Hane Bilgilerini Düzenle</h3>
+                                    <p className="text-sm text-slate-500 font-medium">{person.full_name} - Dosya: #{person.file_no}</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowEditModal(false)}
+                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-500 transition-all border border-transparent hover:border-rose-100"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar bg-slate-50/30">
+                            <PersonForm
+                                inlineId={person.id}
+                                onClose={(saved) => {
+                                    setShowEditModal(false);
+                                    if (saved) refreshData();
+                                }}
+                            />
+                        </div>
                     </div>
                 </div>
             )}

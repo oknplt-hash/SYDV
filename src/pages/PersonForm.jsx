@@ -18,11 +18,13 @@ const ASSISTANCE_TYPES = [
     "Dogalgaz", "Diger Merkezi Yardimlar", "65'lik Maasi", "Diger"
 ];
 
-export function PersonForm() {
-    const { id } = useParams();
+export function PersonForm({ inlineId, onClose }) {
+    const { id: paramId } = useParams();
+    const id = inlineId || paramId;
     const navigate = useNavigate();
     const location = useLocation();
     const isEditing = !!id;
+    const isInline = !!inlineId;
 
     const [formData, setFormData] = useState({
         file_no: location.state?.file_no || '',
@@ -89,14 +91,15 @@ export function PersonForm() {
                 } catch (error) {
                     console.error("Error fetching person:", error);
                     alert("Kişi bilgileri yüklenirken bir hata oluştu.");
-                    navigate('/persons');
+                    if (isInline) onClose?.();
+                    else navigate('/persons');
                 } finally {
                     setInitialLoading(false);
                 }
             };
             fetchPerson();
         }
-    }, [id, isEditing, navigate]);
+    }, [id, isEditing, navigate, isInline, onClose]);
 
     useEffect(() => {
         if (isEditing || !formData.file_no || formData.file_no.length < 3) {
@@ -224,7 +227,11 @@ export function PersonForm() {
                 headers: { 'Content-Type': 'multipart/form-data' },
                 timeout: 60000
             });
-            navigate('/persons');
+            if (isInline) {
+                onClose?.(true); // true means saved
+            } else {
+                navigate('/persons');
+            }
         } catch (error) {
             console.error("Error saving person:", error);
             const msg = error.response?.data?.error || "Kişi kaydedilirken bir hata oluştu.";
@@ -239,25 +246,26 @@ export function PersonForm() {
     }
 
     return (
-        <div className="max-w-5xl mx-auto pb-20 px-4 sm:px-6">
-            <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => navigate('/persons')}
-                        className="p-2.5 rounded-full hover:bg-secondary transition-all hover:scale-105"
-                    >
-                        <ArrowLeft size={20} className="text-muted-foreground" />
-                    </button>
-                    <div>
-                        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                            {isEditing ? 'Haneyi Düzenle' : 'Yeni Hane Oluştur'}
-                        </h1>
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Lütfen tüm hane bilgilerini eksiksiz giriniz.
-                        </p>
+        <div className={`max-w-5xl mx-auto ${isInline ? 'pb-4 px-0' : 'pb-20 px-4 sm:px-6'}`}>
+            {!isInline && (
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                        <button
+                            type="button"
+                            onClick={() => navigate('/persons')}
+                            className="p-2 rounded-xl hover:bg-muted transition-colors"
+                        >
+                            <ArrowLeft size={24} />
+                        </button>
+                        <div>
+                            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                                {isEditing ? 'Hane Kaydını Düzenle' : 'Yeni Hane Kaydı'}
+                            </h1>
+                            <p className="text-muted-foreground text-sm font-medium">Hane ve kişi bilgilerini sistemden güncelleyin</p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-10">
                 <div className="grid gap-8 lg:grid-cols-3">
@@ -650,11 +658,11 @@ export function PersonForm() {
                 </div>
 
                 {/* Footer Actions */}
-                <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t z-50">
-                    <div className="max-w-5xl mx-auto flex justify-end gap-4">
+                <div className={`${isInline ? 'mt-8 border-t pt-4' : 'fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t z-50'}`}>
+                    <div className={`${isInline ? 'flex justify-end gap-3' : 'max-w-5xl mx-auto flex justify-end gap-4'}`}>
                         <button
                             type="button"
-                            onClick={() => navigate('/persons')}
+                            onClick={() => isInline ? onClose?.() : navigate('/persons')}
                             className="inline-flex items-center justify-center rounded-xl text-sm font-bold h-12 px-8 border border-input bg-background hover:bg-secondary transition-all"
                         >
                             Vazgeç
