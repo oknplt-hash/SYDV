@@ -598,13 +598,10 @@ app.get('/api/agenda/:id/presentation', async (req, res) => {
         if (personIds.length > 0) {
             const assistanceResult = await pool.query(`
         SELECT person_id, assistance_type, assistance_date, assistance_amount
-        FROM (
-          SELECT person_id, assistance_type, assistance_date, assistance_amount,
-                 ROW_NUMBER() OVER (PARTITION BY person_id ORDER BY assistance_date DESC, id DESC) as rn
-          FROM assistance_records
-          WHERE person_id = ANY($1)
-        ) ranked
-        WHERE rn <= 2`,
+        FROM assistance_records
+        WHERE person_id = ANY($1)
+          AND assistance_date >= TO_CHAR(CURRENT_DATE - INTERVAL '1 year', 'YYYY-MM-DD')
+        ORDER BY assistance_date DESC, id DESC`,
                 [personIds]
             );
             assistanceResult.rows.forEach(r => {
