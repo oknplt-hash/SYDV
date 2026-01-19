@@ -536,7 +536,7 @@ export function PersonForm() {
                         {/* Mevcutlar */}
                         {existingHouseholdImages.map((img) => (
                             <div key={img.id} className="group relative aspect-square rounded-2xl overflow-hidden border-2 border-muted shadow-sm transition-all hover:shadow-md">
-                                <img src={`/api/household_image/${img.id}/thumb`} alt="Hane" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                <img src={`/api/household_image/${img.id}`} alt="Hane" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                                 <button
                                     type="button"
                                     onClick={() => removeExistingHouseholdImage(img.id)}
