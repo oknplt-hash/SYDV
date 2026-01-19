@@ -246,9 +246,11 @@ app.post('/api/person/new', upload.fields([
         const personId = result.rows[0].id;
 
         // Handle assistance records
-        const types = Array.isArray(b['assistance_type[]']) ? b['assistance_type[]'] : [b['assistance_type[]']].filter(Boolean);
-        const dates = Array.isArray(b['assistance_date[]']) ? b['assistance_date[]'] : [b['assistance_date[]']].filter(Boolean);
-        const amounts = Array.isArray(b['assistance_amount[]']) ? b['assistance_amount[]'] : [b['assistance_amount[]']].filter(Boolean);
+        console.log('[NEW] Body keys:', Object.keys(b));
+        const types = ensureArray(b['assistance_type[]'] || b.assistance_type);
+        const dates = ensureArray(b['assistance_date[]'] || b.assistance_date);
+        const amounts = ensureArray(b['assistance_amount[]'] || b.assistance_amount);
+        console.log(`[NEW] Processing ${types.length} assistance records`);
 
         for (let i = 0; i < types.length; i++) {
             if (types[i] || dates[i] || amounts[i]) {
@@ -337,9 +339,11 @@ app.post('/api/person/:id/edit', upload.fields([
         // Assistance Records Replacement
         await client.query('DELETE FROM assistance_records WHERE person_id = $1', [personId]);
 
-        const types = ensureArray(b['assistance_type[]']);
-        const dates = ensureArray(b['assistance_date[]']);
-        const amounts = ensureArray(b['assistance_amount[]']);
+        console.log('[EDIT] Body keys:', Object.keys(b));
+        const types = ensureArray(b['assistance_type[]'] || b.assistance_type);
+        const dates = ensureArray(b['assistance_date[]'] || b.assistance_date);
+        const amounts = ensureArray(b['assistance_amount[]'] || b.assistance_amount);
+        console.log(`[EDIT] Processing ${types.length} assistance records for items:`, { types, dates, amounts });
 
         for (let i = 0; i < types.length; i++) {
             if (types[i] || dates[i] || amounts[i]) {
