@@ -111,13 +111,29 @@ const normalizeDate = (date) => {
 
 const parseJsonSafe = (val, defaultVal = []) => {
     if (!val) return defaultVal;
-    if (typeof val !== 'string') return val;
-    try {
-        const parsed = JSON.parse(val);
-        return Array.isArray(parsed) ? parsed : defaultVal;
-    } catch (e) {
-        return defaultVal;
+    let data;
+    if (typeof val === 'string') {
+        try {
+            data = JSON.parse(val);
+        } catch (e) {
+            return defaultVal;
+        }
+    } else {
+        data = val;
     }
+
+    if (!Array.isArray(data)) return defaultVal;
+
+    // Repair character-spread arrays: [" [ ", " \" ", " Y ", ... ]
+    if (data.length > 5 && data[0] === '[' && (data.includes('"') || data.includes("'"))) {
+        try {
+            const joined = data.join('');
+            const repaired = JSON.parse(joined);
+            if (Array.isArray(repaired)) return repaired;
+        } catch (e) { }
+    }
+
+    return data;
 };
 
 // Storage configuration
