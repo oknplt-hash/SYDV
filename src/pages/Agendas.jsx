@@ -117,6 +117,14 @@ export function Agendas() {
                                                     Sunum
                                                 </button>
                                                 <button
+                                                    onClick={() => window.open(`/api/agenda/${agenda.id}/report.xlsx`, '_blank')}
+                                                    className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-emerald-50 hover:text-emerald-600 h-8 px-3 gap-1 transition-colors"
+                                                    title="Excel Raporu İndir"
+                                                >
+                                                    <FileText size={14} />
+                                                    Rapor
+                                                </button>
+                                                <button
                                                     onClick={() => navigate(`/agenda/${agenda.id}/edit`)}
                                                     className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 px-3 gap-1"
                                                 >

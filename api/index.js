@@ -649,38 +649,68 @@ app.get('/api/agenda/:id/report.xlsx', async (req, res) => {
         if (agendaResult.rows.length === 0) return res.status(404).end();
 
         const itemsResult = await pool.query(`
-            SELECT p.file_no, p.full_name, ai.application_date, ai.assistance_type, ai.notes,
+            SELECT p.file_no, p.full_name, p.phone, ai.application_date, ai.assistance_type, ai.notes,
                    p.address, p.social_security, p.household_size, p.children_count, p.student_count,
                    p.household_income, p.per_capita_income
             FROM agenda_items ai
             JOIN persons p ON p.id = ai.person_id
             WHERE ai.agenda_id = $1
-            ORDER BY ai.created_at`,
+            ORDER BY ai.sort_order ASC, ai.created_at DESC`,
             [req.params.id]
         );
 
         const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Gundem Raporu');
+        const worksheet = workbook.addWorksheet('Gündem Raporu');
 
         worksheet.columns = [
             { header: 'Dosya No', key: 'file_no', width: 12 },
             { header: 'Ad Soyad', key: 'full_name', width: 25 },
-            { header: 'Basvuru Tarihi', key: 'application_date', width: 15 },
-            { header: 'Yardim Turu', key: 'assistance_type', width: 20 },
-            { header: 'Notlar', key: 'notes', width: 30 },
+            { header: 'Telefon', key: 'phone', width: 15 },
+            { header: 'Başvuru Tarihi', key: 'application_date', width: 15 },
+            { header: 'Yardım Türü', key: 'assistance_type', width: 20 },
+            { header: 'Notlar', key: 'notes', width: 35 },
             { header: 'Adres', key: 'address', width: 40 },
-            { header: 'Sosyal Guvence', key: 'social_security', width: 15 },
-            { header: 'Hane Nufusu', key: 'household_size', width: 12 },
-            { header: 'Cocuk Sayisi', key: 'children_count', width: 12 },
-            { header: 'Ogrenci Sayisi', key: 'student_count', width: 12 },
-            { header: 'Hane Geliri', key: 'household_income', width: 15 },
-            { header: 'Kisi Basina Gelir', key: 'per_capita_income', width: 15 }
+            { header: 'Sosyal Güvence', key: 'social_security', width: 15 },
+            { header: 'Hane Nüfusu', key: 'household_size', width: 12 },
+            { header: 'Çocuk', key: 'children_count', width: 10 },
+            { header: 'Öğrenci', key: 'student_count', width: 10 },
+            { header: 'Hane Geliri (TL)', key: 'household_income', width: 15 },
+            { header: 'Kişi Başı (TL)', key: 'per_capita_income', width: 15 }
         ];
 
-        worksheet.getRow(1).font = { bold: true };
+        // Header Style
+        const headerRow = worksheet.getRow(1);
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF2563EB' } // Blue-600
+        };
+        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
-        itemsResult.rows.forEach(row => {
-            worksheet.addRow(row);
+        itemsResult.rows.forEach((row, index) => {
+            const addedRow = worksheet.addRow(row);
+            // Zebra striping
+            if (index % 2 === 1) {
+                addedRow.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFF9FAFB' }
+                };
+            }
+            addedRow.alignment = { vertical: 'middle' };
+        });
+
+        // Add border to all cells
+        worksheet.eachRow((row) => {
+            row.eachCell((cell) => {
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    right: { style: 'thin', color: { argb: 'FFE5E7EB' } }
+                };
+            });
         });
 
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -689,7 +719,7 @@ app.get('/api/agenda/:id/report.xlsx', async (req, res) => {
         await workbook.xlsx.write(res);
         res.end();
     } catch (error) {
-        console.error(error);
+        console.error("Excel Export Error:", error);
         res.status(500).end();
     }
 });
