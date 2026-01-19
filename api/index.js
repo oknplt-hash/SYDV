@@ -100,6 +100,15 @@ const calculateAge = (birthDateStr) => {
     return age >= 0 ? age : null;
 };
 
+const normalizeDate = (date) => {
+    if (!date) return null;
+    // If it's YYYY-MM, append -01 for Postgres DATE compatibility
+    if (typeof date === 'string' && date.match(/^\d{4}-\d{2}$/)) {
+        return `${date}-01`;
+    }
+    return date;
+};
+
 // Storage configuration
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -245,7 +254,7 @@ app.post('/api/person/new', upload.fields([
             if (types[i] || dates[i] || amounts[i]) {
                 await client.query(
                     'INSERT INTO assistance_records (person_id, assistance_type, assistance_date, assistance_amount) VALUES ($1, $2, $3, $4)',
-                    [personId, types[i], dates[i] || null, parseFloatSafe(amounts[i])]
+                    [personId, types[i], normalizeDate(dates[i]), parseFloatSafe(amounts[i])]
                 );
             }
         }
@@ -336,7 +345,7 @@ app.post('/api/person/:id/edit', upload.fields([
             if (types[i] || dates[i] || amounts[i]) {
                 await client.query(
                     'INSERT INTO assistance_records (person_id, assistance_type, assistance_date, assistance_amount) VALUES ($1, $2, $3, $4)',
-                    [personId, types[i], dates[i] || null, parseFloatSafe(amounts[i])]
+                    [personId, types[i], normalizeDate(dates[i]), parseFloatSafe(amounts[i])]
                 );
             }
         }
