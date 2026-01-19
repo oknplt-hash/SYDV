@@ -100,6 +100,10 @@ export function Presentation() {
     const person = currentSlide.person;
     const isAbovePoverty = parseFloat(person.per_capita_income || 0) >= 9358.5;
 
+    // Check for high-alert social security statuses
+    const ss = (person.social_security || '').toLowerCase();
+    const isHighAlertSS = ss.includes('bağkur') || ss.includes('sgk') || ss.includes('emekli') || ss.includes('emeki') || ss.includes('g1');
+
     const nextSlide = () => {
         if (currentIndex < slides.length - 1) {
             setCurrentIndex(prev => prev + 1);
@@ -207,13 +211,13 @@ export function Presentation() {
                                     <p className="text-sm font-medium text-slate-700 leading-snug">{person.address || 'Kayıtsız'}</p>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
-                                    <Shield size={16} className="text-blue-600" />
+                            <div className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${isHighAlertSS ? 'bg-rose-50 border border-rose-100' : ''}`}>
+                                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isHighAlertSS ? 'bg-rose-100' : 'bg-blue-50'}`}>
+                                    <Shield size={16} className={isHighAlertSS ? 'text-rose-600' : 'text-blue-600'} />
                                 </div>
                                 <div>
-                                    <p className="text-[10px] text-slate-400 uppercase font-semibold">Sosyal Güvence</p>
-                                    <p className="text-sm font-medium text-slate-700">{person.social_security || 'Kayıtsız'}</p>
+                                    <p className={`text-[10px] uppercase font-semibold ${isHighAlertSS ? 'text-rose-400' : 'text-slate-400'}`}>Sosyal Güvence</p>
+                                    <p className={`text-sm font-bold ${isHighAlertSS ? 'text-rose-700' : 'text-slate-700'}`}>{person.social_security || 'Kayıtsız'}</p>
                                 </div>
                             </div>
                         </div>
