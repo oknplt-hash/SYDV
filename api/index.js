@@ -109,6 +109,17 @@ const normalizeDate = (date) => {
     return date;
 };
 
+const parseJsonSafe = (val, defaultVal = []) => {
+    if (!val) return defaultVal;
+    if (typeof val !== 'string') return val;
+    try {
+        const parsed = JSON.parse(val);
+        return Array.isArray(parsed) ? parsed : defaultVal;
+    } catch (e) {
+        return defaultVal;
+    }
+};
+
 // Storage configuration
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -194,6 +205,7 @@ app.get('/api/person/:id', async (req, res) => {
 
         res.json({
             ...person,
+            central_assistance: parseJsonSafe(person.central_assistance),
             assistance_records: assistanceResult.rows,
             household_images: imagesResult.rows,
             has_profile_photo: !!person.profile_photo,
@@ -620,11 +632,6 @@ app.get('/api/agenda/:id/presentation', async (req, res) => {
         }
 
         const slides = itemsResult.rows.map(row => {
-            let central_assistance = [];
-            try {
-                central_assistance = typeof row.central_assistance === 'string' ? JSON.parse(row.central_assistance) : (row.central_assistance || []);
-            } catch (e) { console.error("JSON parse error for central_assistance", e); }
-
             return {
                 agenda_item_id: row.agenda_item_id,
                 application_date: row.application_date,
@@ -636,7 +643,7 @@ app.get('/api/agenda/:id/presentation', async (req, res) => {
                     age: calculateAge(row.birth_date),
                     household_description_lines: normalizeDescription(row.household_description)
                 },
-                central_assistance,
+                central_assistance: parseJsonSafe(row.central_assistance),
                 assistance_records: assistanceMap[row.person_id] || [],
                 household_images: imagesMap[row.person_id] || []
             };

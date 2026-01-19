@@ -64,24 +64,24 @@ export function PersonForm({ inlineId, onClose }) {
                 try {
                     const response = await api.get(`/person/${id}`);
                     const data = response.data;
+
+                    // Robust fix for central_assistance: ensure it's an array
+                    let ca = data.central_assistance;
+                    if (typeof ca === 'string') {
+                        try { ca = JSON.parse(ca); } catch (e) { ca = []; }
+                    }
+                    if (!Array.isArray(ca)) ca = [];
+                    // Detect if it's a character array that should be a JSON string
+                    if (ca.length > 5 && ca[0] === '[' && (ca.includes('"') || ca.includes("'"))) {
+                        try {
+                            const repaired = JSON.parse(ca.join(''));
+                            if (Array.isArray(repaired)) ca = repaired;
+                        } catch (e) { }
+                    }
+
                     setFormData({
-                        file_no: data.file_no || '',
-                        full_name: data.full_name || '',
-                        national_id: data.national_id || '',
-                        birth_date: data.birth_date || '',
-                        spouse_name: data.spouse_name || '',
-                        household_size: data.household_size || '',
-                        children_count: data.children_count || '',
-                        student_count: data.student_count || '',
-                        phone: data.phone || '',
-                        address: data.address || '',
-                        social_security: data.social_security || '',
-                        disability_status: data.disability_status || 'Yok',
-                        disability_rate: data.disability_rate || '',
-                        household_description: data.household_description || '',
-                        household_income: data.household_income || '',
-                        per_capita_income: data.per_capita_income || '',
-                        central_assistance: data.central_assistance || [],
+                        ...data,
+                        central_assistance: ca
                     });
                     setAssistanceRecords(data.assistance_records || []);
                     setExistingHouseholdImages(data.household_images || []);
