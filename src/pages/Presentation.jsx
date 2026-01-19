@@ -87,6 +87,7 @@ export function Presentation() {
     const slides = data.slides;
     const currentSlide = slides[currentIndex];
     const person = currentSlide.person;
+    const isAbovePoverty = parseFloat(person.per_capita_income || 0) >= 9358.5;
 
     const nextSlide = () => {
         if (currentIndex < slides.length - 1) {
@@ -107,7 +108,10 @@ export function Presentation() {
 
             {/* Main Content - NO HEADER */}
             <main className="flex-1 p-6 overflow-hidden">
-                <div className="h-full max-w-[1400px] mx-auto flex gap-6">
+                <div className={`h-full max-w-[1400px] mx-auto flex gap-6 p-2 rounded-[2.5rem] transition-all duration-500 ${isAbovePoverty
+                        ? 'ring-8 ring-rose-500/20 shadow-[0_0_50px_rgba(244,63,94,0.15)] bg-rose-50/[0.02]'
+                        : ''
+                    }`}>
 
                     {/* Left Column - Profile Card */}
                     <div className="w-[340px] shrink-0 flex flex-col gap-5 overflow-y-auto custom-scrollbar-hidden pr-1">
@@ -250,46 +254,39 @@ export function Presentation() {
                             </div>
                         </div>
 
-                        {/* Household Income Line (Horizontal) */}
-                        {(() => {
-                            const perCapitaVal = parseFloat(person.per_capita_income || 0);
-                            const isAbovePoverty = perCapitaVal >= 9358.5;
-                            return (
-                                <div className={`rounded-2xl shadow-md px-6 py-2.5 flex items-center justify-between shrink-0 border transition-all duration-300 ${isAbovePoverty
-                                        ? 'bg-rose-50 border-rose-200 shadow-rose-100/50'
-                                        : 'bg-emerald-50 border-emerald-200 shadow-emerald-100/50'
-                                    }`}>
-                                    <div className="flex items-center gap-8">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isAbovePoverty ? 'bg-rose-100' : 'bg-emerald-100'}`}>
-                                                <Briefcase size={16} className={isAbovePoverty ? 'text-rose-600' : 'text-emerald-600'} />
-                                            </div>
-                                            <div>
-                                                <p className={`text-[9px] uppercase font-bold leading-none ${isAbovePoverty ? 'text-rose-400' : 'text-emerald-400'}`}>Toplam Gelir</p>
-                                                <p className={`text-sm font-bold ${isAbovePoverty ? 'text-rose-900' : 'text-emerald-900'}`}>{parseFloat(person.household_income || 0).toLocaleString('tr-TR')} ₺</p>
-                                            </div>
-                                        </div>
-                                        <div className={`w-px h-6 ${isAbovePoverty ? 'bg-rose-200' : 'bg-emerald-200'}`}></div>
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isAbovePoverty ? 'bg-rose-100' : 'bg-emerald-100'}`}>
-                                                <Users size={16} className={isAbovePoverty ? 'text-rose-600' : 'text-emerald-600'} />
-                                            </div>
-                                            <div>
-                                                <p className={`text-[9px] uppercase font-bold leading-none ${isAbovePoverty ? 'text-rose-400' : 'text-emerald-400'}`}>Kişi Başı Gelir</p>
-                                                <p className={`text-sm font-bold ${isAbovePoverty ? 'text-rose-900' : 'text-emerald-900'}`}>{parseFloat(person.per_capita_income || 0).toLocaleString('tr-TR')} ₺</p>
-                                            </div>
-                                        </div>
+                        <div className={`rounded-2xl shadow-md px-6 py-2.5 flex items-center justify-between shrink-0 border transition-all duration-300 ${isAbovePoverty
+                            ? 'bg-rose-50 border-rose-200 shadow-rose-100/50'
+                            : 'bg-emerald-50 border-emerald-200 shadow-emerald-100/50'
+                            }`}>
+                            <div className="flex items-center gap-8">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isAbovePoverty ? 'bg-rose-100' : 'bg-emerald-100'}`}>
+                                        <Briefcase size={16} className={isAbovePoverty ? 'text-rose-600' : 'text-emerald-600'} />
                                     </div>
-
-                                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border shadow-sm ${isAbovePoverty ? 'bg-white border-rose-200' : 'bg-white border-emerald-200'}`}>
-                                        <div className={`w-2 h-2 rounded-full animate-pulse ${isAbovePoverty ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`}></div>
-                                        <span className={`text-[10px] font-bold uppercase tracking-wider ${isAbovePoverty ? 'text-rose-700' : 'text-emerald-700'}`}>
-                                            {isAbovePoverty ? 'Hane Muhtaçlık Sınırının Üzerinde' : 'Hane Muhtaçlık Sınırının Altında'}
-                                        </span>
+                                    <div>
+                                        <p className={`text-[9px] uppercase font-bold leading-none ${isAbovePoverty ? 'text-rose-400' : 'text-emerald-400'}`}>Toplam Gelir</p>
+                                        <p className={`text-sm font-bold ${isAbovePoverty ? 'text-rose-900' : 'text-emerald-900'}`}>{parseFloat(person.household_income || 0).toLocaleString('tr-TR')} ₺</p>
                                     </div>
                                 </div>
-                            );
-                        })()}
+                                <div className={`w-px h-6 ${isAbovePoverty ? 'bg-rose-200' : 'bg-emerald-200'}`}></div>
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isAbovePoverty ? 'bg-rose-100' : 'bg-emerald-100'}`}>
+                                        <Users size={16} className={isAbovePoverty ? 'text-rose-600' : 'text-emerald-600'} />
+                                    </div>
+                                    <div>
+                                        <p className={`text-[9px] uppercase font-bold leading-none ${isAbovePoverty ? 'text-rose-400' : 'text-emerald-400'}`}>Kişi Başı Gelir</p>
+                                        <p className={`text-sm font-bold ${isAbovePoverty ? 'text-rose-900' : 'text-emerald-900'}`}>{parseFloat(person.per_capita_income || 0).toLocaleString('tr-TR')} ₺</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border shadow-sm ${isAbovePoverty ? 'bg-white border-rose-200' : 'bg-white border-emerald-200'}`}>
+                                <div className={`w-2 h-2 rounded-full animate-pulse ${isAbovePoverty ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`}></div>
+                                <span className={`text-[10px] font-bold uppercase tracking-wider ${isAbovePoverty ? 'text-rose-700' : 'text-emerald-700'}`}>
+                                    {isAbovePoverty ? 'Hane Muhtaçlık Sınırının Üzerinde' : 'Hane Muhtaçlık Sınırının Altında'}
+                                </span>
+                            </div>
+                        </div>
 
                         {/* Middle Row */}
                         <div className="flex-1 flex gap-5 min-h-0">
