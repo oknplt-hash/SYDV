@@ -34,6 +34,10 @@ export function Presentation() {
     const [showEditModal, setShowEditModal] = useState(false);
 
     useEffect(() => {
+        setPopupImageIndex(0);
+    }, [currentIndex]);
+
+    useEffect(() => {
         const fetchData = async () => {
             try {
                 const response = await axios.get(`/api/agenda/${id}/presentation?api=true`);
