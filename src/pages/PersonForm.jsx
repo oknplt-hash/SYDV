@@ -626,9 +626,9 @@ export function PersonForm({ inlineId, onClose }) {
                                 </div>
                                 <div className="md:col-span-3">
                                     <input
-                                        type="month"
+                                        type="date"
                                         className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all font-medium"
-                                        value={rec.assistance_date ? rec.assistance_date.slice(0, 7) : ''}
+                                        value={rec.assistance_date ? rec.assistance_date.slice(0, 10) : ''}
                                         onChange={(e) => handleAssistanceChange(idx, 'assistance_date', e.target.value)}
                                     />
                                 </div>

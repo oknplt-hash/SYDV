@@ -4,6 +4,25 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, X, User, MapPin, Phone, Heart, Briefcase, Home, Users, FileText, Image, ArrowLeft, ArrowRight, GraduationCap, Baby, Shield, Info, Edit } from 'lucide-react';
 import { PersonForm } from './PersonForm';
 
+const TURKISH_MONTHS = [
+    'OCAK', 'ŞUBAT', 'MART', 'NİSAN', 'MAYIS', 'HAZİRAN',
+    'TEMMUZ', 'AĞUSTOS', 'EYLÜL', 'EKİM', 'KASIM', 'ARALIK'
+];
+
+function formatTurkishDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = TURKISH_MONTHS[date.getMonth()];
+        const year = date.getFullYear();
+        return `${day}.${month}.${year}`;
+    } catch (e) {
+        return dateStr;
+    }
+}
+
 export function Presentation() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -345,7 +364,7 @@ export function Presentation() {
                                             <div key={rid} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
                                                 <div>
                                                     <p className="text-sm font-medium text-slate-700">{rec.assistance_type}</p>
-                                                    <p className="text-xs text-slate-400">{rec.assistance_date}</p>
+                                                    <p className="text-xs text-slate-400">{formatTurkishDate(rec.assistance_date)}</p>
                                                 </div>
                                                 <span className="px-3 py-1.5 bg-white rounded-lg text-sm font-bold text-emerald-600 shadow-sm">
                                                     {parseFloat(rec.assistance_amount).toLocaleString('tr-TR')} ₺
