@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
+
 import { useNavigate, useParams } from 'react-router-dom';
 import { Save, ArrowLeft, Search, UserPlus, Trash2, CalendarDays, Loader2, Info, PlusCircle, Sparkles, Users, FileText, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
 
@@ -204,7 +205,7 @@ export function AgendaForm() {
 
     const fetchAgenda = async () => {
         try {
-            const response = await axios.get(`/api/agenda/${id}`);
+            const response = await api.get(`/agenda/${id}`);
             const data = response.data;
             setFormData({
                 title: data.title || '',
@@ -234,23 +235,23 @@ export function AgendaForm() {
         try {
             let agendaId = id;
             if (isEditing) {
-                await axios.post(`/api/agenda/${id}/update`, formData);
+                await api.post(`/agenda/${id}/update`, formData);
             } else {
-                const res = await axios.post('/api/agenda/new', formData);
+                const res = await api.post('/agenda/new', formData);
                 agendaId = res.data.id;
             }
 
             // Save items
             for (const item of items) {
                 if (item._isNew) {
-                    await axios.post(`/api/agenda/${agendaId}/add_item`, {
+                    await api.post(`/agenda/${agendaId}/add_item`, {
                         person_id: item.person.id,
                         application_date: item.application_date,
                         assistance_type: item.assistance_type,
                         notes: item.notes
                     });
                 } else if (item._isUpdated) {
-                    await axios.post(`/api/agenda_item/${item.id}/update`, {
+                    await api.post(`/agenda_item/${item.id}/update`, {
                         application_date: item.application_date,
                         assistance_type: item.assistance_type,
                         notes: item.notes
@@ -268,7 +269,7 @@ export function AgendaForm() {
                 }
             });
             if (personIds.length > 0) {
-                await axios.post(`/api/agenda/${agendaId}/reorder`, { person_ids: personIds });
+                await api.post(`/agenda/${agendaId}/reorder`, { person_ids: personIds });
             }
 
             navigate('/agendas');
@@ -296,7 +297,7 @@ export function AgendaForm() {
     const performSearch = async () => {
         setSearching(true);
         try {
-            const response = await axios.get(`/api/persons?search=${searchQuery}&per_page=5`);
+            const response = await api.get(`/persons?search=${searchQuery}&per_page=5`);
             setSearchResults(response.data.persons);
         } catch (error) {
             console.error("Search error:", error);
@@ -345,7 +346,7 @@ export function AgendaForm() {
         } else {
             if (window.confirm("Bu başvuruyu gündemden kaldırmak istediğinize emin misiniz?")) {
                 try {
-                    await axios.delete(`/api/agenda_item/${item.id}`);
+                    await api.delete(`/agenda_item/${item.id}`);
                     setItems(prev => prev.filter(i => i.id !== item.id));
                 } catch (error) {
                     console.error("Error removing item:", error);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
+
 import { useNavigate } from 'react-router-dom';
 import { Plus, Calendar, FileText, ChevronRight, Presentation, Edit3 } from 'lucide-react';
 
@@ -11,7 +12,7 @@ export function Agendas() {
     useEffect(() => {
         const fetchAgendas = async () => {
             try {
-                const response = await axios.get('/api/agendas');
+                const response = await api.get('/agendas');
                 setAgendas(response.data.agendas);
             } catch (error) {
                 console.error("Error fetching agendas:", error);

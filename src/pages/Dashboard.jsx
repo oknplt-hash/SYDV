@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../api';
+
 import { useNavigate } from 'react-router-dom';
 import { Users, FileText, Activity, TrendingUp, Calendar, ArrowRight, Sparkles, Home, Plus, ChevronRight } from 'lucide-react';
 
@@ -16,8 +17,8 @@ export function Dashboard() {
         const fetchData = async () => {
             try {
                 const [personsRes, agendasRes] = await Promise.all([
-                    axios.get('/api/persons?per_page=1'),
-                    axios.get('/api/agendas')
+                    api.get('/persons?per_page=1'),
+                    api.get('/agendas')
                 ]);
 
                 setStats({

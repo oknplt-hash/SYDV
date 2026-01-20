@@ -1,8 +1,10 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Settings, X } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, X, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 export function Sidebar({ isOpen, setIsOpen }) {
+    const { user, logout } = useAuth();
     const navItems = [
         { to: "/", icon: LayoutDashboard, label: "Ana Sayfa" },
         { to: "/persons", icon: Users, label: "Haneler" },
@@ -55,10 +57,17 @@ export function Sidebar({ isOpen, setIsOpen }) {
                     ))}
                 </nav>
 
-                <div className="p-4 border-t">
-                    <button className="flex items-center gap-3 px-3 py-2 w-full text-muted-foreground hover:text-foreground transition-colors rounded-md">
-                        <Settings size={20} />
-                        <span>Ayarlar</span>
+                <div className="p-4 border-t space-y-2">
+                    <div className="px-3 py-2">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest leading-none mb-1">Kullanıcı</p>
+                        <p className="text-sm font-bold text-foreground truncate">{user?.full_name || user?.username || 'Giriş Yapılmadı'}</p>
+                    </div>
+                    <button
+                        onClick={logout}
+                        className="flex items-center gap-3 px-3 py-2 w-full text-rose-600 hover:bg-rose-50 transition-colors rounded-md font-bold text-sm"
+                    >
+                        <LogOut size={18} />
+                        <span>Güvenli Çıkış</span>
                     </button>
                 </div>
             </aside>

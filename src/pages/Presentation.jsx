@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
+
 import { useParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, X, User, MapPin, Phone, Heart, Briefcase, Home, Users, FileText, Image, ArrowLeft, ArrowRight, GraduationCap, Baby, Shield, Info, Edit } from 'lucide-react';
 import { PersonForm } from './PersonForm';
@@ -40,7 +41,7 @@ export function Presentation() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await axios.get(`/api/agenda/${id}/presentation?api=true`);
+                const response = await api.get(`/agenda/${id}/presentation?api=true`);
                 setData(response.data);
             } catch (error) {
                 console.error("Presentation error:", error);
@@ -55,7 +56,7 @@ export function Presentation() {
 
     const refreshData = async () => {
         try {
-            const response = await axios.get(`/api/agenda/${id}/presentation?api=true`);
+            const response = await api.get(`/agenda/${id}/presentation?api=true`);
             setData(response.data);
         } catch (error) {
             console.error("Refresh error:", error);

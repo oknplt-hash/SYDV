@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
+
 import { Search, ChevronLeft, ChevronRight, Edit, Trash2, UserPlus, Users, Plus, X, Calendar } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -52,7 +53,7 @@ export function Persons() {
         setError(null);
         setSearchPerformed(!!search);
         try {
-            const response = await axios.get(`/api/persons?page=${page}&search=${search}`);
+            const response = await api.get(`/persons?page=${page}&search=${searchTerm}`)
             if (!response.data || !response.data.persons) {
                 throw new Error("Veri formatı geçersiz");
             }
@@ -91,7 +92,7 @@ export function Persons() {
     const handleDelete = async (id) => {
         if (!window.confirm("Bu kaydı silmek istediğinize emin misiniz?")) return;
         try {
-            await axios.delete(`/api/person/${id}`);
+            await api.delete(`/person/${id}`);
             fetchPersons(pagination.page);
         } catch (error) {
             console.error("Error deleting person:", error);
@@ -109,7 +110,7 @@ export function Persons() {
             notes: ''
         }]);
         try {
-            const response = await axios.get('/api/agendas');
+            const response = await api.get('/agendas');
             const agendasData = response.data.agendas;
             setAgendas(agendasData);
             // Set the most recent agenda as default
@@ -154,7 +155,7 @@ export function Persons() {
         try {
             // Add all assistance items
             for (const item of assistanceItems) {
-                await axios.post(`/api/agenda/${selectedAgendaId}/add_item`, {
+                await api.post(`/agenda/${selectedAgendaId}/add_item`, {
                     person_id: selectedPerson.id,
                     application_date: item.application_date,
                     assistance_type: item.assistance_type,

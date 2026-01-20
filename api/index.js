@@ -9,6 +9,9 @@ const { Pool } = pkg;
 import dotenv from 'dotenv';
 import { DateTime } from 'luxon';
 import { Readable } from 'stream';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+
 
 dotenv.config();
 
@@ -139,6 +142,177 @@ const parseJsonSafe = (val, defaultVal = []) => {
 // Storage configuration
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+
+// Auth Middleware
+const SECRET_KEY = process.env.SECRET_KEY || 'dev-secret-key';
+
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) return res.status(401).json({ error: 'Token bulunamadı' });
+
+    jwt.verify(token, SECRET_KEY, (err, user) => {
+        if (err) return res.status(403).json({ error: 'Token geçersiz' });
+        req.user = user;
+        next();
+    });
+};
+
+// Auth Routes
+app.post('/api/auth/login', async (req, res) => {
+    const { username, password } = req.body;
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+        if (result.rows.length === 0) {
+            return res.status(401).json({ error: 'Kullanıcı bulunamadı' });
+        }
+
+        const user = result.rows[0];
+        const validPassword = await bcrypt.compare(password, user.password);
+        if (!validPassword) {
+            return res.status(401).json({ error: 'Şifre hatalı' });
+        }
+
+        const token = jwt.sign(
+            { id: user.id, username: user.username, full_name: user.full_name },
+            SECRET_KEY,
+            { expiresIn: '24h' }
+        );
+
+        res.json({
+            token,
+            user: {
+                id: user.id,
+                username: user.username,
+                full_name: user.full_name
+            }
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        res.status(500).json({ error: 'Giriş yapılamadı' });
+    }
+});
+
+app.get('/api/auth/me', authenticateToken, (req, res) => {
+    res.json(req.user);
+});
+
+// --- Public Media & Report Routes (Must be before authentication protection) ---
+
+app.get('/api/person/:id/profile_photo', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT profile_photo, profile_photo_mimetype FROM persons WHERE id = $1', [req.params.id]);
+        if (result.rows.length === 0 || !result.rows[0].profile_photo) return res.status(404).end();
+        res.setHeader('Content-Type', result.rows[0].profile_photo_mimetype || 'image/jpeg');
+        res.send(result.rows[0].profile_photo);
+    } catch (error) {
+        console.error(error);
+        res.status(500).end();
+    }
+});
+
+app.get('/api/household_image/:id', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT image_data, mimetype FROM household_images WHERE id = $1', [req.params.id]);
+        if (result.rows.length === 0) return res.status(404).end();
+        res.setHeader('Content-Type', result.rows[0].mimetype || 'image/jpeg');
+        res.send(result.rows[0].image_data);
+    } catch (error) {
+        console.error(error);
+        res.status(500).end();
+    }
+});
+
+app.get('/api/agenda/:id/report.xlsx', async (req, res) => {
+    try {
+        const agendaResult = await pool.query('SELECT * FROM agendas WHERE id = $1', [req.params.id]);
+        if (agendaResult.rows.length === 0) return res.status(404).end();
+
+        const itemsResult = await pool.query(`
+            SELECT p.file_no, p.full_name, p.phone, ai.application_date, ai.assistance_type, ai.notes,
+                   p.address, p.social_security, p.household_size, p.children_count, p.student_count,
+                   p.household_income, p.per_capita_income
+            FROM agenda_items ai
+            JOIN persons p ON p.id = ai.person_id
+            WHERE ai.agenda_id = $1
+            ORDER BY ai.sort_order ASC, ai.created_at DESC`,
+            [req.params.id]
+        );
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Gündem Raporu');
+
+        worksheet.columns = [
+            { header: 'Dosya No', key: 'file_no', width: 12 },
+            { header: 'Ad Soyad', key: 'full_name', width: 25 },
+            { header: 'Telefon', key: 'phone', width: 15 },
+            { header: 'Başvuru Tarihi', key: 'application_date', width: 15 },
+            { header: 'Yardım Türü', key: 'assistance_type', width: 20 },
+            { header: 'Notlar', key: 'notes', width: 35 },
+            { header: 'Adres', key: 'address', width: 40 },
+            { header: 'Sosyal Güvence', key: 'social_security', width: 15 },
+            { header: 'Hane Nüfusu', key: 'household_size', width: 12 },
+            { header: 'Çocuk', key: 'children_count', width: 10 },
+            { header: 'Öğrenci', key: 'student_count', width: 10 },
+            { header: 'Hane Geliri (TL)', key: 'household_income', width: 15 },
+            { header: 'Kişi Başı (TL)', key: 'per_capita_income', width: 15 }
+        ];
+
+        // Header Style
+        const headerRow = worksheet.getRow(1);
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF2563EB' } // Blue-600
+        };
+        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+        itemsResult.rows.forEach((row, index) => {
+            const addedRow = worksheet.addRow(row);
+            // Zebra striping
+            if (index % 2 === 1) {
+                addedRow.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFF9FAFB' }
+                };
+            }
+            addedRow.alignment = { vertical: 'middle' };
+        });
+
+        // Add border to all cells
+        worksheet.eachRow((row) => {
+            row.eachCell((cell) => {
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
+                    right: { style: 'thin', color: { argb: 'FFE5E7EB' } }
+                };
+            });
+        });
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename=gundem_${req.params.id}_rapor.xlsx`);
+
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (error) {
+        console.error("Excel Export Error:", error);
+        res.status(500).end();
+    }
+});
+
+// --- Protected Routes ---
+
+// Protect all other routes
+app.use('/api/persons', authenticateToken);
+app.use('/api/person', authenticateToken);
+app.use('/api/agendas', authenticateToken);
+app.use('/api/agenda', authenticateToken);
+app.use('/api/household_image', authenticateToken);
 
 // Routes
 
@@ -431,31 +605,6 @@ app.delete('/api/person/:id', async (req, res) => {
     }
 });
 
-// Photo APIs
-app.get('/api/person/:id/profile_photo', async (req, res) => {
-    try {
-        const result = await pool.query('SELECT profile_photo, profile_photo_mimetype FROM persons WHERE id = $1', [req.params.id]);
-        if (result.rows.length === 0 || !result.rows[0].profile_photo) return res.status(404).end();
-        res.setHeader('Content-Type', result.rows[0].profile_photo_mimetype || 'image/jpeg');
-        res.send(result.rows[0].profile_photo);
-    } catch (error) {
-        console.error(error);
-        res.status(500).end();
-    }
-});
-
-app.get('/api/household_image/:id', async (req, res) => {
-    try {
-        const result = await pool.query('SELECT image_data, mimetype FROM household_images WHERE id = $1', [req.params.id]);
-        if (result.rows.length === 0) return res.status(404).end();
-        res.setHeader('Content-Type', result.rows[0].mimetype || 'image/jpeg');
-        res.send(result.rows[0].image_data);
-    } catch (error) {
-        console.error(error);
-        res.status(500).end();
-    }
-});
-
 // Agendas API
 app.get('/api/agendas', async (req, res) => {
     try {
@@ -672,88 +821,6 @@ app.get('/api/agenda/:id/presentation', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error.message });
-    }
-});
-
-// Excel Export
-app.get('/api/agenda/:id/report.xlsx', async (req, res) => {
-    try {
-        const agendaResult = await pool.query('SELECT * FROM agendas WHERE id = $1', [req.params.id]);
-        if (agendaResult.rows.length === 0) return res.status(404).end();
-
-        const itemsResult = await pool.query(`
-            SELECT p.file_no, p.full_name, p.phone, ai.application_date, ai.assistance_type, ai.notes,
-                   p.address, p.social_security, p.household_size, p.children_count, p.student_count,
-                   p.household_income, p.per_capita_income
-            FROM agenda_items ai
-            JOIN persons p ON p.id = ai.person_id
-            WHERE ai.agenda_id = $1
-            ORDER BY ai.sort_order ASC, ai.created_at DESC`,
-            [req.params.id]
-        );
-
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Gündem Raporu');
-
-        worksheet.columns = [
-            { header: 'Dosya No', key: 'file_no', width: 12 },
-            { header: 'Ad Soyad', key: 'full_name', width: 25 },
-            { header: 'Telefon', key: 'phone', width: 15 },
-            { header: 'Başvuru Tarihi', key: 'application_date', width: 15 },
-            { header: 'Yardım Türü', key: 'assistance_type', width: 20 },
-            { header: 'Notlar', key: 'notes', width: 35 },
-            { header: 'Adres', key: 'address', width: 40 },
-            { header: 'Sosyal Güvence', key: 'social_security', width: 15 },
-            { header: 'Hane Nüfusu', key: 'household_size', width: 12 },
-            { header: 'Çocuk', key: 'children_count', width: 10 },
-            { header: 'Öğrenci', key: 'student_count', width: 10 },
-            { header: 'Hane Geliri (TL)', key: 'household_income', width: 15 },
-            { header: 'Kişi Başı (TL)', key: 'per_capita_income', width: 15 }
-        ];
-
-        // Header Style
-        const headerRow = worksheet.getRow(1);
-        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-        headerRow.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FF2563EB' } // Blue-600
-        };
-        headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
-
-        itemsResult.rows.forEach((row, index) => {
-            const addedRow = worksheet.addRow(row);
-            // Zebra striping
-            if (index % 2 === 1) {
-                addedRow.fill = {
-                    type: 'pattern',
-                    pattern: 'solid',
-                    fgColor: { argb: 'FFF9FAFB' }
-                };
-            }
-            addedRow.alignment = { vertical: 'middle' };
-        });
-
-        // Add border to all cells
-        worksheet.eachRow((row) => {
-            row.eachCell((cell) => {
-                cell.border = {
-                    top: { style: 'thin', color: { argb: 'FFE5E7EB' } },
-                    left: { style: 'thin', color: { argb: 'FFE5E7EB' } },
-                    bottom: { style: 'thin', color: { argb: 'FFE5E7EB' } },
-                    right: { style: 'thin', color: { argb: 'FFE5E7EB' } }
-                };
-            });
-        });
-
-        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        res.setHeader('Content-Disposition', `attachment; filename=gundem_${req.params.id}_rapor.xlsx`);
-
-        await workbook.xlsx.write(res);
-        res.end();
-    } catch (error) {
-        console.error("Excel Export Error:", error);
-        res.status(500).end();
     }
 });
 
