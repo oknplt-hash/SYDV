@@ -319,7 +319,7 @@ export function Persons() {
                                 <div key={person.id} className="bg-white rounded-2xl border p-5 space-y-4 shadow-sm active:scale-[0.98] transition-all">
                                     <div className="flex justify-between items-start">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-lg border border-indigo-100">
+                                            <div className="min-w-[3.5rem] h-10 px-2.5 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-sm border border-indigo-100 shrink-0 shadow-sm shadow-indigo-50/50">
                                                 #{person.file_no}
                                             </div>
                                             <div>
