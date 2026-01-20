@@ -197,7 +197,7 @@ export function Presentation() {
                                     </div>
                                     <div className="bg-slate-50 rounded-xl p-2 text-center">
                                         <Baby size={16} className="mx-auto text-pink-500 mb-1" />
-                                        <p className="text-base font-bold text-slate-800">{person.child_count || 0}</p>
+                                        <p className="text-base font-bold text-slate-800">{person.children_count || 0}</p>
                                         <p className="text-[9px] text-slate-500 uppercase">Çocuk</p>
                                     </div>
                                     <div className="bg-slate-50 rounded-xl p-2 text-center">
