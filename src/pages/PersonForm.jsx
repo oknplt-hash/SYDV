@@ -253,20 +253,20 @@ export function PersonForm({ inlineId, onClose }) {
     return (
         <div className={`max-w-5xl mx-auto ${isInline ? 'pb-4 px-0' : 'pb-20 px-4 sm:px-6'}`}>
             {!isInline && (
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 md:mb-8">
+                    <div className="flex items-center gap-3 md:gap-4">
                         <button
                             type="button"
                             onClick={() => navigate('/persons')}
-                            className="p-2 rounded-xl hover:bg-muted transition-colors"
+                            className="p-2 -ml-2 rounded-xl hover:bg-muted transition-colors active:scale-95"
                         >
-                            <ArrowLeft size={24} />
+                            <ArrowLeft size={window.innerWidth < 768 ? 20 : 24} />
                         </button>
                         <div>
-                            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+                            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
                                 {isEditing ? 'Hane Kaydını Düzenle' : 'Yeni Hane Kaydı'}
                             </h1>
-                            <p className="text-muted-foreground text-sm font-medium">Hane ve kişi bilgilerini sistemden güncelleyin</p>
+                            <p className="text-muted-foreground text-xs md:text-sm font-medium">Hane ve kişi bilgilerini sistemden güncelleyin</p>
                         </div>
                     </div>
                 </div>
@@ -533,13 +533,13 @@ export function PersonForm({ inlineId, onClose }) {
                 </div>
 
                 {/* Hane Fotoğrafları */}
-                <div className="rounded-2xl border bg-card text-card-foreground shadow-sm p-6 space-y-6">
-                    <div className="flex items-center justify-between border-b pb-4">
-                        <h3 className="font-bold text-xl flex items-center gap-2">
+                <div className="rounded-2xl border bg-card text-card-foreground shadow-sm p-4 md:p-6 space-y-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-4">
+                        <h3 className="font-bold text-lg md:text-xl flex items-center gap-2">
                             <Upload size={22} className="text-primary" />
                             Hane Fotoğrafları
                         </h3>
-                        <label className="inline-flex items-center justify-center rounded-xl text-sm font-bold bg-secondary hover:bg-secondary/80 h-10 px-4 transition-all cursor-pointer">
+                        <label className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl text-sm font-bold bg-secondary hover:bg-secondary/80 h-10 px-6 transition-all cursor-pointer border border-secondary active:scale-95">
                             Seç ve Yükle
                             <input type="file" multiple accept="image/*" className="hidden" onChange={handleHouseholdImagesChange} />
                         </label>
@@ -585,13 +585,13 @@ export function PersonForm({ inlineId, onClose }) {
                 </div>
 
                 {/* Geçmiş Yardımlar */}
-                <div className="rounded-2xl border bg-card text-card-foreground shadow-sm p-6 space-y-6">
-                    <div className="flex items-center justify-between border-b pb-4">
-                        <h3 className="font-bold text-xl">Daha Önce Aldığı Yardımlar</h3>
+                <div className="rounded-2xl border bg-card text-card-foreground shadow-sm p-4 md:p-6 space-y-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b pb-4">
+                        <h3 className="font-bold text-lg md:text-xl">Daha Önce Aldığı Yardımlar</h3>
                         <button
                             type="button"
                             onClick={addAssistanceRecord}
-                            className="inline-flex items-center justify-center rounded-xl text-sm font-bold bg-primary/10 text-primary hover:bg-primary/20 h-10 px-4 transition-all gap-2"
+                            className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl text-sm font-bold bg-primary/10 text-primary hover:bg-primary/20 h-10 px-6 transition-all gap-2 active:scale-95"
                         >
                             <Plus size={18} />
                             Satır Ekle
@@ -663,19 +663,19 @@ export function PersonForm({ inlineId, onClose }) {
                 </div>
 
                 {/* Footer Actions */}
-                <div className={`${isInline ? 'mt-8 border-t pt-4' : 'fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t z-50'}`}>
-                    <div className={`${isInline ? 'flex justify-end gap-3' : 'max-w-5xl mx-auto flex justify-end gap-4'}`}>
+                <div className={`${isInline ? 'mt-8 border-t pt-4' : 'fixed bottom-0 left-0 right-0 p-4 bg-background/90 backdrop-blur-lg border-t z-50 shadow-[0_-8px_30px_rgb(0,0,0,0.04)]'}`}>
+                    <div className={`${isInline ? 'flex justify-end gap-3' : 'max-w-5xl mx-auto flex flex-col sm:flex-row justify-end gap-3 md:gap-4'}`}>
                         <button
                             type="button"
                             onClick={() => isInline ? onClose?.() : navigate('/persons')}
-                            className="inline-flex items-center justify-center rounded-xl text-sm font-bold h-12 px-8 border border-input bg-background hover:bg-secondary transition-all"
+                            className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl text-sm font-bold h-12 px-8 border border-input bg-background hover:bg-secondary transition-all active:scale-95"
                         >
                             Vazgeç
                         </button>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="inline-flex items-center justify-center rounded-xl text-sm font-bold h-12 px-12 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100"
+                            className="w-full sm:w-auto inline-flex items-center justify-center rounded-xl text-sm font-bold h-12 px-12 bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:scale-100"
                         >
                             {loading ? (
                                 <span className="flex items-center gap-2">

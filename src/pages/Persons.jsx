@@ -192,117 +192,181 @@ export function Persons() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Haneler</h1>
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                <div className="w-full lg:w-auto">
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Haneler</h1>
                     <p className="text-sm text-muted-foreground mt-1">
                         Sisteme kayıtlı {pagination.total_count} hane bulunuyor
                     </p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <form onSubmit={handleSearch} className="relative">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+                    <form onSubmit={handleSearch} className="relative flex-1 sm:min-w-[240px]">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <input
                             type="search"
                             placeholder="Hane ara..."
-                            className="h-10 rounded-md border border-input bg-background pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-ring w-[200px] lg:w-[300px]"
+                            className="h-10 w-full rounded-xl border border-input bg-background pl-9 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </form>
                     <button
                         onClick={() => navigate('/person/new')}
-                        className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 gap-2"
+                        className="inline-flex items-center justify-center rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 gap-2 shadow-lg shadow-primary/20 transition-all active:scale-95"
                     >
-                        <UserPlus size={16} />
-                        Yeni Hane
+                        <UserPlus size={18} />
+                        <span>Yeni Hane</span>
                     </button>
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="rounded-lg border bg-card shadow-sm">
-                <div className="relative w-full overflow-auto">
-                    <table className="w-full text-sm">
-                        <thead className="border-b bg-muted/50">
-                            <tr>
-                                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Dosya No</th>
-                                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Ad Soyad</th>
-                                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Telefon</th>
-                                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Sosyal Güvence</th>
-                                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Kayıt Tarihi</th>
-                                <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">İşlemler</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr>
-                                    <td colSpan="6" className="h-24 text-center">Yükleniyor...</td>
-                                </tr>
-                            ) : persons.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" className="h-32 text-center">
-                                        {searchPerformed && searchTerm ? (
-                                            <div className="flex flex-col items-center gap-4 py-4">
-                                                <div className="text-muted-foreground">
-                                                    <p className="font-semibold">"{searchTerm}" için kayıt bulunamadı.</p>
-                                                    <p className="text-sm mt-1">Bu dosya numarası ile yeni bir hane oluşturabilirsiniz.</p>
-                                                </div>
-                                                <button
-                                                    onClick={() => navigate('/person/new', { state: { file_no: searchTerm } })}
-                                                    className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-6 gap-2"
-                                                >
-                                                    <UserPlus size={16} />
-                                                    Yeni Hane Oluştur
-                                                </button>
+            {/* Content Area */}
+            <div className="space-y-4">
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                        <div className="w-10 h-10 border-3 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                        <p className="text-sm text-muted-foreground font-medium">Yükleniyor...</p>
+                    </div>
+                ) : persons.length === 0 ? (
+                    <div className="rounded-2xl border-2 border-dashed p-12 text-center bg-card/50">
+                        {searchPerformed && searchTerm ? (
+                            <div className="flex flex-col items-center gap-4">
+                                <div className="p-4 bg-muted rounded-full">
+                                    <Search size={32} className="text-muted-foreground" />
+                                </div>
+                                <div className="text-muted-foreground">
+                                    <p className="font-bold text-lg">Sonuç bulunamadı</p>
+                                    <p className="text-sm mt-1">"{searchTerm}" için herhangi bir hane kaydı mevcut değil.</p>
+                                </div>
+                                <button
+                                    onClick={() => navigate('/person/new', { state: { file_no: searchTerm } })}
+                                    className="inline-flex items-center justify-center rounded-xl text-sm font-bold bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-6 gap-2"
+                                >
+                                    <Plus size={18} />
+                                    Yeni Hane Olarak Kaydet
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="space-y-2">
+                                <Users size={48} className="mx-auto text-muted-foreground/50 mb-4" />
+                                <p className="font-semibold text-lg">Henüz hane bulunmuyor</p>
+                                <p className="text-sm text-muted-foreground">Sisteme ilk hane kaydını ekleyerek başlayın.</p>
+                            </div>
+                        )}
+                    </div>
+                ) : (
+                    <>
+                        {/* Desktop Table View */}
+                        <div className="hidden md:block rounded-2xl border bg-card shadow-sm overflow-hidden">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                    <thead className="border-b bg-muted/30">
+                                        <tr>
+                                            <th className="h-12 px-4 text-left font-bold text-slate-700">Dosya No</th>
+                                            <th className="h-12 px-4 text-left font-bold text-slate-700">Ad Soyad</th>
+                                            <th className="h-12 px-4 text-left font-bold text-slate-700">Telefon</th>
+                                            <th className="h-12 px-4 text-left font-bold text-slate-700">Sosyal Güvence</th>
+                                            <th className="h-12 px-4 text-left font-bold text-slate-700">Kayıt Tarihi</th>
+                                            <th className="h-12 px-4 text-right font-bold text-slate-700">İşlemler</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y">
+                                        {persons.map((person) => (
+                                            <tr key={person.id} className="hover:bg-muted/30 transition-colors group">
+                                                <td className="p-4 font-bold text-primary">#{person.file_no}</td>
+                                                <td className="p-4 font-semibold text-slate-900">{person.full_name}</td>
+                                                <td className="p-4 text-slate-600">{person.phone || "-"}</td>
+                                                <td className="p-4">
+                                                    <span className="px-2 py-1 bg-secondary text-secondary-foreground rounded-lg text-xs font-medium">
+                                                        {person.social_security || "Kayıtsız"}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4 text-slate-500">
+                                                    {person.created_at ? new Date(person.created_at).toLocaleDateString('tr-TR') : "-"}
+                                                </td>
+                                                <td className="p-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={() => handleAddToAgenda(person)}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-xs font-bold hover:shadow-lg transition-all"
+                                                        >
+                                                            <Plus size={14} /> Gündem
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleEdit(person.id)}
+                                                            className="p-1.5 border border-slate-200 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition-all"
+                                                        >
+                                                            <Edit size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(person.id)}
+                                                            className="p-1.5 border border-slate-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600 rounded-lg transition-all"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Mobile Card View */}
+                        <div className="md:hidden grid gap-4">
+                            {persons.map((person) => (
+                                <div key={person.id} className="bg-white rounded-2xl border p-5 space-y-4 shadow-sm active:scale-[0.98] transition-all">
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-lg border border-indigo-100">
+                                                #{person.file_no}
                                             </div>
-                                        ) : (
-                                            "Kayıt bulunamadı."
-                                        )}
-                                    </td>
-                                </tr>
-                            ) : (
-                                persons.map((person) => (
-                                    <tr key={person.id} className="border-b hover:bg-muted/50">
-                                        <td className="p-4 align-middle font-medium">{person.file_no}</td>
-                                        <td className="p-4 align-middle">{person.full_name}</td>
-                                        <td className="p-4 align-middle">{person.phone || "-"}</td>
-                                        <td className="p-4 align-middle">{person.social_security || "-"}</td>
-                                        <td className="p-4 align-middle">
-                                            {person.created_at ? new Date(person.created_at).toLocaleDateString('tr-TR') : "-"}
-                                        </td>
-                                        <td className="p-4 align-middle text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                <button
-                                                    onClick={() => handleAddToAgenda(person)}
-                                                    className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-8 px-3 gap-1"
-                                                    title="Gündeme Ekle"
-                                                >
-                                                    <Plus size={14} />
-                                                    Gündem
-                                                </button>
-                                                <button
-                                                    onClick={() => handleEdit(person.id)}
-                                                    className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground h-8 w-8"
-                                                    title="Düzenle"
-                                                >
-                                                    <Edit size={16} />
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(person.id)}
-                                                    className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-input bg-background hover:bg-destructive hover:text-destructive-foreground h-8 w-8"
-                                                    title="Sil"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
+                                            <div>
+                                                <h3 className="font-bold text-slate-900 leading-none mb-1.5">{person.full_name}</h3>
+                                                <p className="text-xs text-slate-500 flex items-center gap-1">
+                                                    <Calendar size={12} />
+                                                    {person.created_at ? new Date(person.created_at).toLocaleDateString('tr-TR') : "-"}
+                                                </p>
                                             </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                                        </div>
+                                        <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                                            {person.social_security || "Güvencesiz"}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex items-center gap-4 py-2 border-y border-slate-50">
+                                        <div className="flex-1">
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Telefon</p>
+                                            <p className="text-sm font-medium text-slate-700">{person.phone || "Kayıtlı değil"}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handleAddToAgenda(person)}
+                                            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-primary text-primary-foreground rounded-xl text-xs font-bold shadow-md shadow-primary/10 transition-all"
+                                        >
+                                            <Plus size={16} /> Gündeme Ekle
+                                        </button>
+                                        <button
+                                            onClick={() => handleEdit(person.id)}
+                                            className="w-11 h-11 flex items-center justify-center border border-slate-100 bg-slate-50 text-slate-600 rounded-xl transition-all"
+                                        >
+                                            <Edit size={18} />
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(person.id)}
+                                            className="w-11 h-11 flex items-center justify-center border border-red-50 bg-red-50 text-red-600 rounded-xl transition-all"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                )}
             </div>
 
             {/* Pagination */}

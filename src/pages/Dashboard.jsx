@@ -52,21 +52,21 @@ export function Dashboard() {
     return (
         <div className="space-y-8">
             {/* Hero Section */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-10 shadow-2xl">
+            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-6 md:p-10 shadow-2xl">
                 <div className="absolute inset-0 bg-grid-white/10 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.5))]"></div>
                 <div className="absolute top-0 right-0 -mt-20 -mr-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
                 <div className="absolute bottom-0 left-0 -mb-20 -ml-20 h-64 w-64 rounded-full bg-white/10 blur-3xl"></div>
 
                 <div className="relative z-10 space-y-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-3">
                         <div className="p-3 bg-white/20 backdrop-blur-sm rounded-2xl">
-                            <Home className="text-white" size={32} />
+                            <Home className="text-white" size={window.innerWidth < 768 ? 24 : 32} />
                         </div>
                         <div>
-                            <h1 className="text-5xl font-black tracking-tight text-white drop-shadow-lg">
+                            <h1 className="text-3xl md:text-5xl font-black tracking-tight text-white drop-shadow-lg">
                                 Hoşgeldiniz
                             </h1>
-                            <p className="text-indigo-100 text-lg font-medium mt-2">
+                            <p className="text-indigo-100 text-sm md:text-lg font-medium mt-1 md:mt-2">
                                 SYDV Yönetim Sistemi - Gündemlerinizi ve haneleri kolayca yönetin
                             </p>
                         </div>
@@ -129,27 +129,27 @@ export function Dashboard() {
 
             {/* Recent Agendas */}
             <div className="rounded-3xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 shadow-lg overflow-hidden">
-                <div className="border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-6">
-                    <div className="flex items-center justify-between">
+                <div className="border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 p-4 md:p-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl">
-                                <Calendar className="text-white" size={24} />
+                                <Calendar className="text-white" size={20} md:size={24} />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold text-foreground">Son Gündemler</h3>
-                                <p className="text-sm text-muted-foreground mt-0.5">En son oluşturulan gündem kayıtları</p>
+                                <h3 className="text-lg md:text-xl font-bold text-foreground">Son Gündemler</h3>
+                                <p className="text-xs text-muted-foreground mt-0.5">En son oluşturulan gündemler</p>
                             </div>
                         </div>
                         <button
                             onClick={() => navigate('/agendas')}
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm font-semibold text-foreground hover:bg-gray-50 dark:hover:bg-gray-700 transition-all hover:scale-105"
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm font-semibold text-foreground hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                         >
                             Tümünü Gör
                             <ChevronRight size={16} />
                         </button>
                     </div>
                 </div>
-                <div className="p-6">
+                <div className="p-4 md:p-6">
                     {recentAgendas.length === 0 ? (
                         <div className="text-center py-12">
                             <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 flex items-center justify-center mb-4">
@@ -233,22 +233,22 @@ function QuickActionCard({ title, description, icon: Icon, gradient, onClick }) 
     return (
         <div
             onClick={onClick}
-            className="group relative overflow-hidden rounded-3xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 p-8 cursor-pointer hover:border-solid hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+            className="group relative overflow-hidden rounded-3xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 p-6 md:p-8 cursor-pointer hover:border-solid hover:shadow-xl transition-all duration-300"
         >
             <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-opacity" style={{ background: `linear-gradient(to bottom right, var(--tw-gradient-stops))` }}></div>
-            <div className="relative flex items-start gap-4">
-                <div className={`flex-shrink-0 p-4 bg-gradient-to-br ${gradient} rounded-2xl shadow-lg group-hover:scale-110 transition-transform`}>
-                    <Icon className="text-white" size={32} />
+            <div className="relative flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4">
+                <div className={`p-4 bg-gradient-to-br ${gradient} rounded-2xl shadow-lg group-hover:scale-110 transition-transform`}>
+                    <Icon className="text-white" size={28} md:size={32} />
                 </div>
                 <div className="flex-1">
-                    <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                    <h3 className="text-lg md:text-xl font-bold text-foreground mb-1 md:mb-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                         {title}
                     </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
                         {description}
                     </p>
                 </div>
-                <Plus className="text-muted-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:rotate-90 transition-all" size={24} />
+                <Plus className="hidden sm:block text-muted-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:rotate-90 transition-all" size={24} />
             </div>
         </div>
     );

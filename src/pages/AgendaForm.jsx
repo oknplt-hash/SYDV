@@ -60,45 +60,47 @@ const SortableHousehold = ({ group, groupIndex, totalGroups, handleMoveGroup, ad
     };
 
     return (
-        <div ref={setNodeRef} style={style} className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+        <div ref={setNodeRef} style={style} className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden transition-all duration-300">
             {/* Group Header */}
-            <div className="bg-muted/30 px-4 py-2 flex items-center justify-between border-b border-border">
-                <div className="flex items-center gap-3">
-                    <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1 -ml-2 text-muted-foreground hover:text-foreground touch-none bg-muted/50 rounded-md">
+            <div className="bg-muted/30 px-3 md:px-4 py-3 md:py-2 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-border gap-3">
+                <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1.5 -ml-1 text-muted-foreground hover:text-foreground touch-none bg-muted/50 rounded-lg">
                         <GripVertical size={18} />
                     </div>
-                    <span className="font-bold text-sm text-foreground">{group.person.full_name}</span>
-                    <span className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground">
-                        #{group.person.file_no}
-                    </span>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 flex-1 min-w-0">
+                        <span className="font-bold text-sm md:text-base text-foreground truncate">{group.person.full_name}</span>
+                        <span className="w-fit text-[10px] md:text-xs font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground border">
+                            #{group.person.file_no}
+                        </span>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="flex items-center bg-muted rounded-lg border border-border p-0.5">
+                <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto border-t sm:border-t-0 pt-2 sm:pt-0">
+                    <div className="flex items-center bg-muted rounded-xl border border-border p-1">
                         <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); handleMoveGroup(groupIndex, 'up'); }}
                             disabled={groupIndex === 0}
-                            className="p-1 hover:bg-white dark:hover:bg-gray-800 rounded disabled:opacity-30 transition-colors"
+                            className="p-1.5 hover:bg-white dark:hover:bg-gray-800 rounded-lg disabled:opacity-30 transition-colors"
                             title="Yukarı Taşı"
                         >
-                            <ArrowUp size={14} />
+                            <ArrowUp size={16} />
                         </button>
                         <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); handleMoveGroup(groupIndex, 'down'); }}
                             disabled={groupIndex === totalGroups - 1}
-                            className="p-1 hover:bg-white dark:hover:bg-gray-800 rounded disabled:opacity-30 transition-colors"
+                            className="p-1.5 hover:bg-white dark:hover:bg-gray-800 rounded-lg disabled:opacity-30 transition-colors"
                             title="Aşağı Taşı"
                         >
-                            <ArrowDown size={14} />
+                            <ArrowDown size={16} />
                         </button>
                     </div>
                     <button
                         type="button"
                         onClick={() => addAnotherAssistance(group.person)}
-                        className="text-xs font-semibold px-2 py-1 bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-colors flex items-center gap-1"
+                        className="flex-1 sm:flex-none text-xs font-bold px-3 py-2 bg-primary/10 text-primary hover:bg-primary/20 rounded-xl transition-all flex items-center justify-center gap-1.5 active:scale-95"
                     >
-                        <PlusCircle size={14} />
+                        <PlusCircle size={16} />
                         Ekle
                     </button>
                 </div>
@@ -107,16 +109,17 @@ const SortableHousehold = ({ group, groupIndex, totalGroups, handleMoveGroup, ad
             {/* Items List */}
             <div className="divide-y divide-border">
                 {group.assistances.map((item, idx) => (
-                    <div key={item.id} className={`p-3 flex gap-4 items-start ${item._isNew ? 'bg-primary/5' : ''}`}>
-                        <div className="pt-1.5 text-xs text-muted-foreground font-mono w-4">
+                    <div key={item.id} className={`p-4 flex flex-col sm:flex-row gap-4 items-stretch sm:items-start ${item._isNew ? 'bg-primary/5' : ''}`}>
+                        <div className="hidden sm:block pt-1.5 text-xs text-muted-foreground font-mono w-4 shrink-0">
                             {idx + 1}
                         </div>
 
-                        <div className="grid gap-3 sm:grid-cols-12 flex-1">
+                        <div className="grid gap-4 sm:grid-cols-12 flex-1">
                             {/* Type */}
-                            <div className="sm:col-span-3">
+                            <div className="sm:col-span-4 lg:col-span-3">
+                                <label className="sm:hidden text-[10px] font-bold text-muted-foreground uppercase mb-1 block">YARDIM TÜRÜ</label>
                                 <select
-                                    className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs focus:ring-1 focus:ring-primary"
+                                    className="flex h-10 sm:h-8 w-full rounded-xl sm:rounded-md border border-input bg-background px-3 sm:px-2 py-1 text-sm sm:text-xs focus:ring-2 focus:ring-primary/20 transition-all"
                                     value={item.assistance_type || ''}
                                     onChange={(e) => handleItemChange(item.id, 'assistance_type', e.target.value)}
                                 >
@@ -127,34 +130,45 @@ const SortableHousehold = ({ group, groupIndex, totalGroups, handleMoveGroup, ad
                             </div>
 
                             {/* Date */}
-                            <div className="sm:col-span-3">
+                            <div className="sm:col-span-4 lg:col-span-3">
+                                <label className="sm:hidden text-[10px] font-bold text-muted-foreground uppercase mb-1 block">BAŞVURU TARİHİ</label>
                                 <input
                                     type="date"
-                                    className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs focus:ring-1 focus:ring-primary"
+                                    className="flex h-10 sm:h-8 w-full rounded-xl sm:rounded-md border border-input bg-background px-3 sm:px-2 py-1 text-sm sm:text-xs focus:ring-2 focus:ring-primary/20 transition-all font-medium"
                                     value={item.application_date ? item.application_date.split('T')[0] : ''}
                                     onChange={(e) => handleItemChange(item.id, 'application_date', e.target.value)}
                                 />
                             </div>
 
                             {/* Notes */}
-                            <div className="sm:col-span-6">
-                                <input
-                                    type="text"
-                                    className="flex h-8 w-full rounded-md border border-input bg-background px-2 py-1 text-xs focus:ring-1 focus:ring-primary"
-                                    placeholder="Notlar..."
-                                    value={item.notes || ''}
-                                    onChange={(e) => handleItemChange(item.id, 'notes', e.target.value)}
-                                />
+                            <div className="sm:col-span-4 lg:col-span-6 lg:flex gap-2">
+                                <div className="flex-1">
+                                    <label className="sm:hidden text-[10px] font-bold text-muted-foreground uppercase mb-1 block">NOTLAR</label>
+                                    <input
+                                        type="text"
+                                        className="flex h-10 sm:h-8 w-full rounded-xl sm:rounded-md border border-input bg-background px-3 sm:px-2 py-1 text-sm sm:text-xs focus:ring-2 focus:ring-primary/20 transition-all"
+                                        placeholder="Notlar..."
+                                        value={item.notes || ''}
+                                        onChange={(e) => handleItemChange(item.id, 'notes', e.target.value)}
+                                    />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => handleRemoveItem(item)}
+                                    className="sm:hidden mt-3 w-full flex items-center justify-center gap-2 py-2 text-red-500 bg-red-50 rounded-xl text-xs font-bold transition-all"
+                                >
+                                    <Trash2 size={16} /> Başvuruyu Kaldır
+                                </button>
                             </div>
                         </div>
 
                         <button
                             type="button"
                             onClick={() => handleRemoveItem(item)}
-                            className="p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded transition-colors"
+                            className="hidden sm:flex p-1.5 text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                             title="Sil"
                         >
-                            <Trash2 size={16} />
+                            <Trash2 size={18} />
                         </button>
                     </div>
                 ))}
@@ -418,11 +432,11 @@ export function AgendaForm() {
     return (
         <div className="max-w-7xl mx-auto space-y-6 pb-20">
             {/* Header - Compact */}
-            <div className="flex items-center justify-between bg-white dark:bg-gray-900 border border-border p-4 rounded-xl shadow-sm">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between bg-white dark:bg-gray-900 border border-border p-4 rounded-2xl shadow-sm gap-4">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate('/agendas')}
-                        className="p-2 rounded-lg hover:bg-muted transition-colors"
+                        className="p-2 rounded-xl hover:bg-muted transition-colors active:scale-95"
                     >
                         <ArrowLeft size={20} />
                     </button>
@@ -435,10 +449,17 @@ export function AgendaForm() {
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="text-right hidden sm:block">
-                        <div className="text-sm font-bold">{sortedGroups.length} Hane</div>
-                        <div className="text-xs text-muted-foreground">{items.length} Başvuru</div>
+                <div className="flex items-center justify-between sm:justify-end gap-6 bg-muted/30 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none">
+                    <div className="text-left sm:text-right">
+                        <div className="text-sm font-black text-primary">{sortedGroups.length} Hane</div>
+                        <div className="text-[10px] font-bold text-muted-foreground uppercase">{items.length} Başvuru</div>
+                    </div>
+                    <div className="sm:hidden">
+                        {/* Mobile Status Indicator */}
+                        <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                            <span className="text-[10px] font-bold text-emerald-600 uppercase">Yayında</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -446,55 +467,55 @@ export function AgendaForm() {
             <div className="grid gap-6 lg:grid-cols-12">
                 {/* Sidebar - Form (Compact) */}
                 <div className="lg:col-span-4 space-y-4">
-                    <div className="sticky top-6">
-                        <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+                    <div className="lg:sticky lg:top-6">
+                        <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
                             <div className="p-4 border-b border-border bg-muted/30">
-                                <h3 className="font-semibold text-sm flex items-center gap-2">
-                                    <FileText size={16} className="text-primary" />
+                                <h3 className="font-bold text-sm flex items-center gap-2">
+                                    <FileText size={18} className="text-primary" />
                                     Gündem Bilgileri
                                 </h3>
                             </div>
-                            <div className="p-4">
-                                <form id="agenda-form" onSubmit={handleSubmit} className="space-y-4">
-                                    <div className="space-y-1.5">
-                                        <label htmlFor="title" className="text-xs font-medium text-muted-foreground uppercase">
-                                            Başlık *
+                            <div className="p-5">
+                                <form id="agenda-form" onSubmit={handleSubmit} className="space-y-6">
+                                    <div className="space-y-2">
+                                        <label htmlFor="title" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
+                                            Gündem Başlığı *
                                         </label>
                                         <input
                                             id="title"
                                             name="title"
                                             type="text"
                                             required
-                                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:ring-1 focus:ring-primary"
+                                            className="flex h-11 w-full rounded-xl border border-input bg-background/50 px-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 transition-all font-medium"
                                             placeholder="Örn: Ekim Ayı Toplantısı"
                                             value={formData.title}
                                             onChange={handleChange}
                                         />
                                     </div>
 
-                                    <div className="space-y-1.5">
-                                        <label htmlFor="meeting_date" className="text-xs font-medium text-muted-foreground uppercase">
-                                            Tarih
+                                    <div className="space-y-2">
+                                        <label htmlFor="meeting_date" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
+                                            Toplantı Tarihi
                                         </label>
                                         <input
                                             id="meeting_date"
                                             name="meeting_date"
                                             type="date"
-                                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm focus:ring-1 focus:ring-primary"
+                                            className="flex h-11 w-full rounded-xl border border-input bg-background/50 px-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 transition-all font-medium"
                                             value={formData.meeting_date}
                                             onChange={handleChange}
                                         />
                                     </div>
 
-                                    <div className="space-y-1.5">
-                                        <label htmlFor="description" className="text-xs font-medium text-muted-foreground uppercase">
-                                            Açıklama
+                                    <div className="space-y-2">
+                                        <label htmlFor="description" className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest pl-1">
+                                            Açıklama / Notlar
                                         </label>
                                         <textarea
                                             id="description"
                                             name="description"
-                                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-1 focus:ring-primary resize-none"
-                                            placeholder="Notlar..."
+                                            className="flex min-h-[100px] w-full rounded-xl border border-input bg-background/50 px-4 py-3 text-sm focus:ring-2 focus:ring-primary/20 transition-all resize-none leading-relaxed"
+                                            placeholder="Gündem hakkında ek bilgiler..."
                                             value={formData.description}
                                             onChange={handleChange}
                                         />
@@ -504,10 +525,10 @@ export function AgendaForm() {
                                         form="agenda-form"
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground font-medium h-10 text-sm shadow hover:bg-primary/90 transition-all gap-2"
+                                        className="w-full inline-flex items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold h-12 text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all gap-2 active:scale-95 disabled:scale-100 disabled:opacity-50"
                                     >
-                                        {loading ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-                                        {isEditing ? 'Kaydet' : 'Oluştur'}
+                                        {loading ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                                        {isEditing ? 'Değişiklikleri Kaydet' : 'Gündemi Oluştur'}
                                     </button>
                                 </form>
                             </div>
@@ -518,19 +539,19 @@ export function AgendaForm() {
                 {/* Main Content - Applications */}
                 <div className="lg:col-span-8 space-y-4">
                     {/* Search (Compact) */}
-                    <div className="bg-card border border-border rounded-xl shadow-sm p-4 relative z-50">
+                    <div className="bg-card border border-border rounded-2xl shadow-sm p-4 relative z-50">
                         <div className="relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                             <input
                                 type="text"
-                                className="pl-9 pr-4 flex h-10 w-full rounded-lg border border-input bg-background text-sm focus:ring-1 focus:ring-primary"
+                                className="pl-11 pr-4 flex h-11 w-full rounded-xl border border-input bg-background/50 text-sm focus:ring-2 focus:ring-primary/20 transition-all font-medium"
                                 placeholder="Gündeme eklemek için isim veya dosya no..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                             {searching && (
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                    <Loader2 className="animate-spin text-primary" size={16} />
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                    <Loader2 className="animate-spin text-primary" size={18} />
                                 </div>
                             )}
 

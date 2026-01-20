@@ -145,14 +145,14 @@ export function Presentation() {
         <div className="fixed inset-0 bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 z-[100] overflow-hidden flex flex-col font-sans select-none">
 
             {/* Main Content - NO HEADER */}
-            <main className="flex-1 p-6 overflow-hidden">
-                <div className={`h-full max-w-[1400px] mx-auto flex gap-6 p-2 rounded-[2.5rem] transition-all duration-500 ${isAbovePoverty
-                    ? 'ring-8 ring-rose-500/20 shadow-[0_0_50px_rgba(244,63,94,0.15)] bg-rose-50/[0.02]'
+            <main className="flex-1 p-3 md:p-6 overflow-y-auto lg:overflow-hidden">
+                <div className={`h-full max-w-[1400px] mx-auto flex flex-col lg:flex-row gap-5 md:gap-6 p-2 md:p-2 rounded-2xl md:rounded-[2.5rem] transition-all duration-500 ${isAbovePoverty
+                    ? 'ring-4 md:ring-8 ring-rose-500/20 shadow-[0_0_50px_rgba(244,63,94,0.15)] bg-rose-50/[0.02]'
                     : ''
                     }`}>
 
                     {/* Left Column - Profile Card */}
-                    <div className="w-[340px] shrink-0 flex flex-col gap-5 overflow-y-auto custom-scrollbar-hidden pr-1">
+                    <div className="w-full lg:w-[340px] shrink-0 flex flex-col gap-5 lg:overflow-y-auto custom-scrollbar-hidden pr-0 lg:pr-1">
 
                         {/* Profile Card */}
                         <div className="bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100 overflow-hidden shrink-0">
@@ -334,7 +334,7 @@ export function Presentation() {
                         </div>
 
                         {/* Middle Row */}
-                        <div className="flex-1 flex gap-5 min-h-0">
+                        <div className="flex-1 flex flex-col lg:flex-row gap-5 min-h-0">
 
                             {/* Investigation Report */}
                             <div className="flex-[3] bg-white rounded-2xl shadow-lg shadow-slate-200/50 border border-slate-100 p-6 flex flex-col">
@@ -414,16 +414,24 @@ export function Presentation() {
             </div>
 
             {/* Navigation Footer */}
-            <div className="h-12 bg-white/80 backdrop-blur-xl border-t border-slate-200/50 flex items-center justify-between px-8 shrink-0">
-                <button onClick={prevSlide} disabled={currentIndex === 0} className="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-800 disabled:opacity-30 transition-all">
-                    <ChevronLeft size={18} /> Önceki
+            <div className="h-16 md:h-12 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 flex items-center justify-between px-4 md:px-8 shrink-0">
+                <button
+                    onClick={prevSlide}
+                    disabled={currentIndex === 0}
+                    className="flex-1 sm:flex-none flex items-center justify-center sm:justify-start gap-2 h-full text-sm md:text-sm font-bold text-slate-600 hover:text-slate-800 disabled:opacity-30 transition-all border-r sm:border-r-0 border-slate-100"
+                >
+                    <ChevronLeft size={20} /> <span className="hidden sm:inline">Önceki</span>
                 </button>
-                <div className="flex items-center gap-6">
-                    <button onClick={() => navigate('/agendas')} className="text-xs text-slate-400 hover:text-slate-600 transition-colors">Çıkış (ESC)</button>
-                    <span className="text-sm font-semibold text-slate-700">Madde {currentIndex + 1} / {slides.length}</span>
+                <div className="flex-[2] sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-6 px-4">
+                    <button onClick={() => navigate('/agendas')} className="text-[10px] md:text-xs text-slate-400 font-bold hover:text-slate-600 transition-colors uppercase tracking-wider">Çıkış</button>
+                    <span className="text-xs md:text-sm font-black text-slate-700 whitespace-nowrap">{currentIndex + 1} / {slides.length}</span>
                 </div>
-                <button onClick={nextSlide} disabled={currentIndex === slides.length - 1} className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 disabled:opacity-30 transition-all">
-                    Sonraki <ChevronRight size={18} />
+                <button
+                    onClick={nextSlide}
+                    disabled={currentIndex === slides.length - 1}
+                    className="flex-1 sm:flex-none flex items-center justify-center sm:justify-start gap-2 h-full text-sm md:text-sm font-bold text-blue-600 hover:text-blue-800 disabled:opacity-30 transition-all border-l sm:border-l-0 border-slate-100"
+                >
+                    <span className="hidden sm:inline">Sonraki</span> <ChevronRight size={20} />
                 </button>
             </div>
 
