@@ -68,6 +68,9 @@ const SortableHousehold = ({ group, groupIndex, totalGroups, handleMoveGroup, ad
                     <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing p-1.5 -ml-1 text-muted-foreground hover:text-foreground touch-none bg-muted/50 rounded-lg">
                         <GripVertical size={18} />
                     </div>
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
+                        {totalGroups - groupIndex}
+                    </div>
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 flex-1 min-w-0">
                         <span className="font-bold text-sm md:text-base text-foreground truncate">{group.person.full_name}</span>
                         <span className="w-fit text-[10px] md:text-xs font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground border">
