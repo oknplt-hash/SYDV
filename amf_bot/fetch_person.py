@@ -17,7 +17,7 @@ def safe_readDate(self):
 pyamf.amf3.Decoder.readDate = safe_readDate
 
 def extract_strings(binary_data):
-    strings = re.findall(b'[a-zA-Z0-9_\.\-\/\:\ \(\)\*\,\?\!]{4,}', binary_data)
+    strings = re.findall(rb'[a-zA-Z0-9_\.\-\/\:\ \(\)\*\,\?\!]{4,}', binary_data)
     return [s.decode('latin1', errors='ignore') for s in strings]
 
 def fetch_data(hane_no):
