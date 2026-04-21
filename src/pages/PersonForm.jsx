@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { Save, ArrowLeft, Plus, Trash2, Camera, Upload, X } from 'lucide-react';
+import { Save, ArrowLeft, Plus, Trash2, Camera, Upload, X, Zap } from 'lucide-react';
 
 const SOCIAL_SECURITY_OPTIONS = ["G0", "G1", "Emekli", "65 Maaşı", "Engelli Maaşı", "Bağkur", "SGK"];
 const DISABILITY_OPTIONS = ["Yok", "Var"];
@@ -55,8 +55,55 @@ export function PersonForm({ inlineId, onClose }) {
     const [deleteImageIds, setDeleteImageIds] = useState([]);
 
     const [loading, setLoading] = useState(false);
+    const [fetchingFromSystem, setFetchingFromSystem] = useState(false);
     const [initialLoading, setInitialLoading] = useState(isEditing);
     const [fileNoStatus, setFileNoStatus] = useState({ status: 'idle', person: null });
+
+    const handleFetchFromSystem = async () => {
+        if (!formData.file_no) {
+            alert("Lütfen önce bir Dosya No giriniz.");
+            return;
+        }
+        
+        setFetchingFromSystem(true);
+        try {
+            const response = await api.get(`/external/fetch/${formData.file_no}`);
+            const data = response.data;
+            
+            if (data.error) {
+                alert(`Hata: ${data.error}`);
+                return;
+            }
+
+            // Form data update
+            setFormData(prev => ({
+                ...prev,
+                full_name: data.full_name || prev.full_name,
+                national_id: data.national_id || prev.national_id,
+                birth_date: data.birth_date || prev.birth_date,
+                phone: data.phone || prev.phone,
+                spouse_name: data.spouse_name || prev.spouse_name,
+                household_description: data.household_description || prev.household_description
+            }));
+
+            // Assistance records update
+            if (data.assistance_records && data.assistance_records.length > 0) {
+                const newRecords = data.assistance_records.map(r => ({
+                    assistance_type: r.type,
+                    assistance_date: r.date,
+                    assistance_amount: r.amount.replace(/\./g, '').replace(',', '.')
+                }));
+                setAssistanceRecords(prev => [...newRecords, ...prev]);
+            }
+            
+            alert("Bilgiler başarıyla sistemden çekildi.");
+        } catch (error) {
+            console.error("Error fetching from system:", error);
+            alert("Sistemden veri çekilirken bir hata oluştu. HAR dosyasının güncel olduğundan emin olun.");
+        } finally {
+            setFetchingFromSystem(false);
+        }
+    };
 
     useEffect(() => {
         if (isEditing) {
@@ -304,7 +351,21 @@ export function PersonForm({ inlineId, onClose }) {
                         <div className="rounded-2xl border bg-card text-card-foreground shadow-sm p-6 space-y-5">
                             <h3 className="font-bold text-lg border-b pb-3 mb-2">Kimlik & Erişim</h3>
                             <div className="space-y-2">
-                                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Dosya No *</label>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Dosya No *</label>
+                                    <button
+                                        type="button"
+                                        onClick={handleFetchFromSystem}
+                                        disabled={fetchingFromSystem || !formData.file_no}
+                                        className="flex items-center gap-1.5 text-[10px] font-bold bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded-lg transition-all active:scale-95 disabled:opacity-50"
+                                        title="Bütünleşik Sistemden Bilgileri Çek"
+                                    >
+                                        {fetchingFromSystem ? (
+                                            <div className="w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                                        ) : <Zap size={12} />}
+                                        SİSTEMDEN ÇEK
+                                    </button>
+                                </div>
                                 <div className="relative">
                                     <input
                                         name="file_no"
