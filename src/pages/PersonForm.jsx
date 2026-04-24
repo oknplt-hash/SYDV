@@ -68,7 +68,7 @@ export function PersonForm({ inlineId, onClose }) {
         
         setFetchingFromSystem(true);
         try {
-            const response = await api.get(`/external/fetch/${formData.file_no}`);
+            const response = await api.get(`/python_fetch?file_no=${formData.file_no}`);
             const data = response.data;
             
             if (data.error) {
