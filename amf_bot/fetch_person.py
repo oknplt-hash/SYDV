@@ -139,6 +139,11 @@ def fetch_data(hane_no):
             env.items()[0][1].body[0].body = [hane_no]
             resp = requests.post(req_url, headers=req_headers, cookies=req_cookies, data=remoting.encode(env).getvalue(), verify=False)
             txt = fix_turkish(resp.content.decode('latin1', errors='ignore'))
+            
+            # Oturum kontrolü
+            if "Session Expired" in txt or "Authentication Failed" in txt or resp.status_code in [301, 302, 401, 403]:
+                return {"error": "Oturum süresi dolmuş (Session Expired). Lütfen Bütünleşik sisteme giriş yapıp yeni bir HAR dosyası indirin."}
+                
             # Ziyaret notları
             match = re.search(r'Ziyareti[^<]*</b>(.*?)<b>', txt, re.DOTALL | re.IGNORECASE)
             if match:

@@ -79,19 +79,19 @@ export function PersonForm({ inlineId, onClose }) {
             // Form data update
             setFormData(prev => ({
                 ...prev,
-                full_name: data.full_name || prev.full_name,
-                national_id: data.national_id || prev.national_id,
-                birth_date: data.birth_date || prev.birth_date,
-                phone: data.phone || prev.phone,
-                spouse_name: data.spouse_name || prev.spouse_name,
-                address: data.address || prev.address,
-                household_description: data.household_description || prev.household_description,
-                household_size: data.household_size || prev.household_size,
-                children_count: data.children_count || prev.children_count,
-                household_income: data.household_income || prev.household_income,
-                per_capita_income: data.per_capita_income || prev.per_capita_income,
-                social_security: data.social_security || prev.social_security,
-                central_assistance: data.central_programs || prev.central_assistance
+                full_name: (data.full_name || prev.full_name) || "",
+                national_id: (data.national_id || prev.national_id) || "",
+                birth_date: (data.birth_date || prev.birth_date) || "",
+                phone: (data.phone || prev.phone) || "",
+                spouse_name: (data.spouse_name || prev.spouse_name) || "",
+                address: (data.address || prev.address) || "",
+                household_description: (data.household_description || prev.household_description) || "",
+                household_size: (data.household_size || prev.household_size) || "",
+                children_count: (data.children_count || prev.children_count) || "",
+                household_income: (data.household_income || prev.household_income) || "",
+                per_capita_income: (data.per_capita_income || prev.per_capita_income) || "",
+                social_security: (data.social_security || prev.social_security) || "",
+                central_assistance: (data.central_programs || prev.central_assistance) || []
             }));
 
             // Assistance records update
