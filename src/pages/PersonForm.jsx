@@ -10,12 +10,12 @@ const CENTRAL_ASSISTANCE_OPTIONS = [
     "Doğalgaz Tüketim Desteği", "Elektrik Tüketim Desteği", "SHÇEK", "E.V.E.K"
 ];
 const ASSISTANCE_TYPES = [
-    "Gida Yardimi", "Nakit Yardim", "Egitim Yardimi", "Giysi Yardimi",
-    "Saglik Yardimi", "Kira Yardimi", "Komur Yardimi", "Tibbi Cihaz Yardimi",
-    "Ev Onarim Yardimi", "Ev Esyasi Yardimi", "Aile Yardimi", "Tek Seferlik Yardim",
-    "Yol Yardimi", "Universite Ogrencilerine Yonelik Yardim",
-    "Sartli Egitim Saglik Yardimi", "Yasli Ayligi", "Engelli Ayligi",
-    "Dogalgaz", "Diger Merkezi Yardimlar", "65'lik Maasi", "Diger"
+    "Gıda Yardımı", "Nakit Yardım", "Eğitim Yardımı", "Giysi Yardımı",
+    "Sağlık Yardımı", "Kira Yardımı", "Kömür Yardımı", "Tıbbi Cihaz Yardımı",
+    "Ev Onarım Yardımı", "Ev Eşyası Yardımı", "Aile Yardımı", "Tek Seferlik Yardım",
+    "Yol Yardımı", "Üniversite Öğrencilerine Yönelik Yardım",
+    "Şartlı Eğitim Sağlık Yardımı", "Yaşlı Aylığı", "Engelli Aylığı",
+    "Doğalgaz Desteği", "SHÇEK", "E.V.E.K", "Diğer"
 ];
 
 export function PersonForm({ inlineId, onClose }) {
@@ -56,6 +56,7 @@ export function PersonForm({ inlineId, onClose }) {
 
     const [loading, setLoading] = useState(false);
     const [fetchingFromSystem, setFetchingFromSystem] = useState(false);
+    const [fetchSuccess, setFetchSuccess] = useState(false);
     const [initialLoading, setInitialLoading] = useState(isEditing);
     const [fileNoStatus, setFileNoStatus] = useState({ status: 'idle', person: null });
 
@@ -83,7 +84,14 @@ export function PersonForm({ inlineId, onClose }) {
                 birth_date: data.birth_date || prev.birth_date,
                 phone: data.phone || prev.phone,
                 spouse_name: data.spouse_name || prev.spouse_name,
-                household_description: data.household_description || prev.household_description
+                address: data.address || prev.address,
+                household_description: data.household_description || prev.household_description,
+                household_size: data.household_size || prev.household_size,
+                children_count: data.children_count || prev.children_count,
+                household_income: data.household_income || prev.household_income,
+                per_capita_income: data.per_capita_income || prev.per_capita_income,
+                social_security: data.social_security || prev.social_security,
+                central_assistance: data.central_programs || prev.central_assistance
             }));
 
             // Assistance records update
@@ -91,15 +99,17 @@ export function PersonForm({ inlineId, onClose }) {
                 const newRecords = data.assistance_records.map(r => ({
                     assistance_type: r.type,
                     assistance_date: r.date,
-                    assistance_amount: r.amount.replace(/\./g, '').replace(',', '.')
+                    assistance_amount: typeof r.amount === 'string' ? r.amount.replace(/\./g, '').replace(',', '.') : '0.00'
                 }));
-                setAssistanceRecords(prev => [...newRecords, ...prev]);
+                setAssistanceRecords(newRecords);
             }
             
-            alert("Bilgiler başarıyla sistemden çekildi.");
+            setFetchSuccess(true);
+            setTimeout(() => setFetchSuccess(false), 3000);
         } catch (error) {
             console.error("Error fetching from system:", error);
-            alert("Sistemden veri çekilirken bir hata oluştu. HAR dosyasının güncel olduğundan emin olun.");
+            const errorMsg = error.response?.data?.error || "Sistemden veri çekilirken bir hata oluştu. HAR dosyasının güncel olduğundan emin olun.";
+            alert(errorMsg);
         } finally {
             setFetchingFromSystem(false);
         }
@@ -353,18 +363,25 @@ export function PersonForm({ inlineId, onClose }) {
                             <div className="space-y-2">
                                 <div className="flex items-center justify-between">
                                     <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Dosya No *</label>
-                                    <button
-                                        type="button"
-                                        onClick={handleFetchFromSystem}
-                                        disabled={fetchingFromSystem || !formData.file_no}
-                                        className="flex items-center gap-1.5 text-[10px] font-bold bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded-lg transition-all active:scale-95 disabled:opacity-50"
-                                        title="Bütünleşik Sistemden Bilgileri Çek"
-                                    >
-                                        {fetchingFromSystem ? (
-                                            <div className="w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                                        ) : <Zap size={12} />}
-                                        SİSTEMDEN ÇEK
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        {fetchSuccess && (
+                                            <span className="text-[10px] text-green-600 font-bold animate-in fade-in zoom-in duration-300">
+                                                ✓ Başarıyla çekildi
+                                            </span>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={handleFetchFromSystem}
+                                            disabled={fetchingFromSystem || !formData.file_no}
+                                            className="flex items-center gap-1.5 text-[10px] font-bold bg-primary/10 text-primary hover:bg-primary/20 px-2 py-1 rounded-lg transition-all active:scale-95 disabled:opacity-50"
+                                            title="Bütünleşik Sistemden Bilgileri Çek"
+                                        >
+                                            {fetchingFromSystem ? (
+                                                <div className="w-3 h-3 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                                            ) : <Zap size={12} />}
+                                            SİSTEMDEN ÇEK
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="relative">
                                     <input
