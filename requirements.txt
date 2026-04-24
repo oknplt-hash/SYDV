@@ -1,0 +1,3 @@
+requests
+pyamf
+psycopg2-binary

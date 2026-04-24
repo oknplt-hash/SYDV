@@ -1,6 +1,10 @@
 {
     "rewrites": [
         {
+            "source": "/api/external/fetch/(.*)",
+            "destination": "/api/python_fetch.py?file_no=$1"
+        },
+        {
             "source": "/api/(.*)",
             "destination": "/api/index.js"
         },

@@ -93,13 +93,16 @@ def extract_strings(binary_data):
         except: res.append(fix_turkish(s.decode('latin1', errors='ignore')))
     return res
 
-def fetch_data(hane_no):
-    har_path = os.path.join(os.path.dirname(__file__), 'butunlesik.har')
-    if not os.path.exists(har_path): return {"error": "HAR dosyasi bulunamadi."}
+def fetch_data(hane_no, har_data=None):
+    if har_data:
+        data = har_data
+    else:
+        har_path = os.path.join(os.path.dirname(__file__), 'butunlesik.har')
+        if not os.path.exists(har_path): return {"error": "HAR dosyasi bulunamadi."}
 
-    try:
-        with open(har_path, 'r', encoding='utf-8') as f: data = json.load(f)
-    except: return {"error": "HAR hatasi."}
+        try:
+            with open(har_path, 'r', encoding='utf-8') as f: data = json.load(f)
+        except: return {"error": "HAR hatasi."}
 
     req_url, req_headers, req_cookies, templates = None, {}, {}, {}
     for entry in data['log']['entries']:

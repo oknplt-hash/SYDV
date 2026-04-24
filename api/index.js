@@ -323,42 +323,8 @@ app.use('/api/household_image', authenticateToken);
 app.use('/api/external', authenticateToken);
 
 // --- External API Bridge ---
-app.get('/api/external/fetch/:file_no', async (req, res) => {
-    const { file_no } = req.params;
-    console.log(`[EXTERNAL] Fetching data for File No: ${file_no}`);
-    
-    // Python betiğini çalıştır
-    const scriptPath = path.join(__dirname, '..', 'amf_bot', 'fetch_person.py');
-    const pythonProcess = spawn('python', [scriptPath, file_no]);
-
-    let dataString = '';
-    let errorString = '';
-
-    pythonProcess.stdout.on('data', (data) => {
-        dataString += data.toString();
-    });
-
-    pythonProcess.stderr.on('data', (data) => {
-        errorString += data.toString();
-    });
-
-    pythonProcess.on('close', (code) => {
-        if (code !== 0) {
-            console.error(`Python Process exited with code ${code}. Error: ${errorString}`);
-            return res.status(500).json({ error: 'Sorgulama sırasında bir hata oluştu.', details: errorString });
-        }
-        try {
-            const result = JSON.parse(dataString);
-            if (result.error) {
-                return res.status(400).json(result);
-            }
-            res.json(result);
-        } catch (e) {
-            console.error('JSON Parse Error:', dataString);
-            res.status(500).json({ error: 'Veri ayrıştırma hatası.' });
-        }
-    });
-});
+// The /api/external/fetch/:file_no endpoint is now handled by Vercel Python Serverless Function (api/python_fetch.py).
+// See vercel.json rewrites for routing.
 
 // Routes
 
